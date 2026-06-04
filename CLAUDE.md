@@ -45,6 +45,33 @@ npm run dev
 npm test
 ```
 
+## Integration Tests (local, against a real Neon branch)
+
+Run this procedure when you need to execute `*.integration.test.ts` locally (e.g. after implementing DB-touching code, or before opening a PR to `main`).
+
+```bash
+# NEON_PROJECT_ID and NEON_ROLE_NAME are set in .env.local (gitignored).
+source .env.local
+
+# 1. Create a throwaway Neon branch
+npx neonctl branches create --name <branch-name> --project-id "$NEON_PROJECT_ID"
+
+# 2. Get the direct connection string
+CONN=$(npx neonctl connection-string \
+  --branch <branch-name> \
+  --project-id "$NEON_PROJECT_ID" \
+  --role-name "$NEON_ROLE_NAME")
+
+# 3. Apply migrations to the branch
+DATABASE_URL_UNPOOLED="$CONN" npm run db:migrate
+
+# 4. Run integration tests against it
+TEST_DATABASE_URL_UNPOOLED="$CONN" npm test -- --project integration
+
+# 5. Delete the branch when done
+npx neonctl branches delete <branch-name> --project-id "$NEON_PROJECT_ID"
+```
+
 ## Lint / Type Check
 ```bash
 npm run lint && npx tsc --noEmit
