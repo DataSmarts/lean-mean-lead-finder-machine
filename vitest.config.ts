@@ -8,6 +8,7 @@ export default defineConfig({
     env: {
       DATABASE_URL: "postgresql://test:test@localhost/test",
       DATABASE_URL_UNPOOLED: "postgresql://test:test@localhost/test",
+      GOOGLE_MAPS_API_KEY: "test-google-maps-key",
       ADMIN_USERNAME: "test-admin",
       ADMIN_PASSWORD: "test-password",
       SESSION_SECRET: "test-session-secret-at-least-32-bytes-long",

@@ -5,6 +5,7 @@ import { parseEnv } from "./env";
 const validBase = {
   DATABASE_URL: "postgresql://user:pass@host/db",
   DATABASE_URL_UNPOOLED: "postgresql://user:pass@host/db",
+  GOOGLE_MAPS_API_KEY: "test-google-maps-key",
   ADMIN_USERNAME: "admin",
   ADMIN_PASSWORD: "correct horse battery staple",
   SESSION_SECRET: "0123456789abcdef0123456789abcdef",

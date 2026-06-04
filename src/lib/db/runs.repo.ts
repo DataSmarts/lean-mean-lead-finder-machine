@@ -53,6 +53,20 @@ export function makeRunsRepo(db: AppDatabase) {
       }
     },
 
+    // Caches the geocoded coordinates on the run so Discover skips re-geocoding on resume.
+    async setGeocode(id: string, lat: number, lng: number): Promise<Run | undefined> {
+      try {
+        const [row] = await db
+          .update(runs)
+          .set(withUpdatedAt({ geocodeLat: lat, geocodeLng: lng }))
+          .where(eq(runs.id, id))
+          .returning();
+        return row;
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to set run geocode", { id });
+      }
+    },
+
     // Atomically increments a counter column and stamps updated_at.
     async incrementCounter(id: string, field: CounterField, amount = 1): Promise<Run | undefined> {
       const col = runs[field];

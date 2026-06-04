@@ -354,6 +354,8 @@ describe("runBusinessesRepo", () => {
 
     const first = await rbRepo.link(run.id, biz.id);
     const second = await rbRepo.link(run.id, biz.id);
-    expect(second.id).toBe(first.id); // same row returned
+    expect(first.created).toBe(true);
+    expect(second.created).toBe(false);
+    expect(second.runBusiness.id).toBe(first.runBusiness.id); // same row returned
   });
 });
