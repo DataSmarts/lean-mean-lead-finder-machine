@@ -1,0 +1,7 @@
+.next
+coverage
+build
+out
+node_modules
+*.md
+legacy/
