@@ -1,0 +1,29 @@
+:root {
+  --bg: #0d0e10;
+  --bg-elevated: #141619;
+  --ink: #ece7df;
+  --ink-dim: #8b8a85;
+  --line: #26282c;
+  --accent: #e9b04a;
+  --accent-soft: rgba(233, 176, 74, 0.14);
+  --danger: #e2705a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

@@ -1,0 +1,208 @@
+.screen {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem 1.25rem;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(233, 176, 74, 0.08), transparent 60%),
+    radial-gradient(900px 500px at 90% 110%, rgba(80, 120, 200, 0.06), transparent 55%);
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(circle at 50% 38%, black, transparent 75%);
+  mask-image: radial-gradient(circle at 50% 38%, black, transparent 75%);
+  opacity: 0.35;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 25rem;
+  padding: 2.75rem 2.25rem 2rem;
+  background: linear-gradient(180deg, rgba(20, 22, 25, 0.92), rgba(13, 14, 16, 0.92));
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 40px 80px -40px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.frame {
+  position: absolute;
+  inset: 9px;
+  pointer-events: none;
+  opacity: 0.7;
+  --tick: linear-gradient(var(--accent), var(--accent));
+  background:
+    var(--tick) 0 0 / 14px 2px no-repeat,
+    var(--tick) 0 0 / 2px 14px no-repeat,
+    var(--tick) 100% 0 / 14px 2px no-repeat,
+    var(--tick) 100% 0 / 2px 14px no-repeat,
+    var(--tick) 0 100% / 14px 2px no-repeat,
+    var(--tick) 0 100% / 2px 14px no-repeat,
+    var(--tick) 100% 100% / 14px 2px no-repeat,
+    var(--tick) 100% 100% / 2px 14px no-repeat;
+}
+
+.kicker {
+  margin: 0 0 1.5rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+  animation: rise 0.5s ease forwards;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--ink);
+  opacity: 0;
+  animation: rise 0.5s ease forwards 0.06s;
+}
+
+.subtitle {
+  margin: 0.6rem 0 2rem;
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+  opacity: 0;
+  animation: rise 0.5s ease forwards 0.12s;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  opacity: 0;
+  animation: rise 0.5s ease forwards 0.18s;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.input {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  outline: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: -0.1rem 0 0;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.78rem;
+  color: var(--danger);
+  background: rgba(226, 112, 90, 0.08);
+  border: 1px solid rgba(226, 112, 90, 0.3);
+  border-radius: 3px;
+}
+
+.error span {
+  font-weight: 600;
+}
+
+.submit {
+  margin-top: 0.4rem;
+  padding: 0.8rem 1rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #131313;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    filter 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 8px 24px -10px var(--accent);
+}
+
+.submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.footer {
+  margin: 1.6rem 0 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: #54534f;
+  text-align: center;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kicker,
+  .title,
+  .subtitle,
+  .form {
+    animation: none;
+    opacity: 1;
+  }
+}

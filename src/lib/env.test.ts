@@ -5,6 +5,9 @@ import { parseEnv } from "./env";
 const validBase = {
   DATABASE_URL: "postgresql://user:pass@host/db",
   DATABASE_URL_UNPOOLED: "postgresql://user:pass@host/db",
+  ADMIN_USERNAME: "admin",
+  ADMIN_PASSWORD: "correct horse battery staple",
+  SESSION_SECRET: "0123456789abcdef0123456789abcdef",
 };
 
 describe("parseEnv", () => {
@@ -31,5 +34,9 @@ describe("parseEnv", () => {
 
   it("does not throw when optional SENTRY_DSN is absent", () => {
     expect(() => parseEnv(validBase)).not.toThrow();
+  });
+
+  it("rejects a SESSION_SECRET shorter than 32 characters", () => {
+    expect(() => parseEnv({ ...validBase, SESSION_SECRET: "too-short" })).toThrow("SESSION_SECRET");
   });
 });
