@@ -24,8 +24,12 @@ interface StatusUpdate {
 
 export function makeRunBusinessesRepo(db: AppDatabase) {
   return {
-    // Idempotent link: if the pair already exists, do nothing (Discover dedupe).
-    async link(runId: string, businessId: string): Promise<RunBusiness> {
+    // Idempotent link: if the pair already exists, do nothing (Discover dedupe). `created` reports
+    // whether a new row was inserted, so callers can count newly-found businesses per run.
+    async link(
+      runId: string,
+      businessId: string,
+    ): Promise<{ runBusiness: RunBusiness; created: boolean }> {
       try {
         const [row] = await db
           .insert(runBusinesses)
@@ -33,15 +37,14 @@ export function makeRunBusinessesRepo(db: AppDatabase) {
           .onConflictDoNothing()
           .returning();
         if (!row) {
-          // Row existed; fetch and return it
           const existing = await db
             .select()
             .from(runBusinesses)
             .where(and(eq(runBusinesses.runId, runId), eq(runBusinesses.businessId, businessId)));
           if (!existing[0]) throw new Error("Link row not found after conflict");
-          return existing[0];
+          return { runBusiness: existing[0], created: false };
         }
-        return row;
+        return { runBusiness: row, created: true };
       } catch (cause) {
         throw wrapDbError(cause, "Failed to link run-business", { runId, businessId });
       }

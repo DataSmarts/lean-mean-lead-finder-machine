@@ -1,11 +1,11 @@
 # Project Context
 
-Lead Finder — a three-stage pipeline that turns a niche + location into a list of enriched, contactable leads:
-1. **Discover** — search Google Maps Places API for businesses matching a query (e.g. "family law attorney Houston TX"), paginate up to a configurable max.
-2. **Enrich** — for each business, use an AI agent (via OpenRouter) to find the owner/decision-maker: name, title, email, LinkedIn, Instagram, Twitter, Facebook.
-3. **Verify** — run each lead's website through Hunter.io to find and validate executive/management email addresses.
+Lead Finder — a pipeline that turns a niche + location into a list of enriched, contactable leads:
+1. **Discover** — search Google Maps Places API for a niche + location query (e.g. "family law attorney Houston TX"), paginate up to a configurable max, dedupe by place ID.
+2. **Approve** — a human reviews the discovered businesses (via Telegram or the dashboard) and approves before any paid enrichment runs.
+3. **Enrich** — for every approved business, run an AI agent (via OpenRouter — name, title, email, LinkedIn, Instagram, Twitter, Facebook) **and** Hunter.io (executive/management email discovery + validation) **in parallel**, then **merge** the two sources into unified contact records with **field-level provenance**.
 
-Legacy implementation lives in `legacy/` as n8n workflows. The new build replaces that with a proper app and durable storage.
+This build replaces a legacy n8n + Google Sheets pipeline with a proper app and durable storage.
 
 ## Stack
 
@@ -17,7 +17,7 @@ Defer to [TECH_STACK_GUIDE.md](./TECH_STACK_GUIDE.md) for all other tool decisio
 
 ## Architecture Overview
 
-Standard layout per `TECH_STACK_GUIDE.md`. Pipeline stages (Discover → Enrich → Verify) map to Trigger.dev tasks; each stage produces typed records written to **Neon Postgres** rather than Google Sheets.
+Standard layout per `TECH_STACK_GUIDE.md`. Pipeline stages (Discover → Approve → Enrich) map to Trigger.dev tasks; each stage produces typed records written to **Neon Postgres** rather than Google Sheets.
 
 ## Related Guides
 

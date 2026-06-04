@@ -20,7 +20,15 @@ export const db: NeonHttpDatabase<typeof schema> = drizzleHttp(neonSql, { schema
 const pgClient = postgres(env.DATABASE_URL_UNPOOLED, { prepare: false });
 export const dbDirect: PostgresJsDatabase<typeof schema> = drizzlePg(pgClient, { schema });
 
-// Accepted by every repo factory. Covers both clients for standard CRUD.
-// A repo that needs .transaction() must accept PostgresJsDatabase<typeof schema> directly,
-// which surfaces the neon-http no-transaction constraint at the call site.
-export type AppDatabase = NeonHttpDatabase<typeof schema> | PostgresJsDatabase<typeof schema>;
+// The transaction handle passed to a dbDirect.transaction(...) callback. Repos accept it too,
+// so the same factory works inside a transaction (used by Discover's per-page write).
+export type DbTransaction = Parameters<
+  Parameters<PostgresJsDatabase<typeof schema>["transaction"]>[0]
+>[0];
+
+// Accepted by every repo factory. Covers both clients for standard CRUD, plus a live transaction.
+// Interactive transactions only exist on dbDirect (postgres-js); neon-http is single-shot HTTP.
+export type AppDatabase =
+  | NeonHttpDatabase<typeof schema>
+  | PostgresJsDatabase<typeof schema>
+  | DbTransaction;
