@@ -1,0 +1,1 @@
+ALTER TABLE "runs" ADD COLUMN "approval_waitpoint_id" text;

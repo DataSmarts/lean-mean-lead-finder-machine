@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 import { wrapDbError } from "@/lib/errors/db-error";
 
@@ -39,7 +39,9 @@ export function makeRunsRepo(db: AppDatabase) {
     async updateStatus(
       id: string,
       status: RunStatusValue,
-      extra: Partial<Pick<Run, "startedAt" | "finishedAt" | "error" | "triggerRunId">> = {},
+      extra: Partial<
+        Pick<Run, "startedAt" | "finishedAt" | "error" | "triggerRunId" | "approvalWaitpointId">
+      > = {},
     ): Promise<Run | undefined> {
       try {
         const [row] = await db
@@ -79,6 +81,71 @@ export function makeRunsRepo(db: AppDatabase) {
         return row;
       } catch (cause) {
         throw wrapDbError(cause, "Failed to increment run counter", { id, field });
+      }
+    },
+
+    async findByApprovalToken(token: string): Promise<Run | undefined> {
+      try {
+        const rows = await db.select().from(runs).where(eq(runs.approvalToken, token));
+        return rows[0];
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to find run by approval token");
+      }
+    },
+
+    // Atomic claim: sets approved_at + approved_by only if status=awaiting_approval and no decision
+    // has been recorded yet. Returns undefined if the claim was already taken (idempotent).
+    async recordApproval(id: string, by: string): Promise<Run | undefined> {
+      try {
+        const [row] = await db
+          .update(runs)
+          .set(withUpdatedAt({ approvedAt: new Date(), approvedBy: by }))
+          .where(
+            and(
+              eq(runs.id, id),
+              eq(runs.status, "awaiting_approval"),
+              isNull(runs.approvedAt),
+              isNull(runs.rejectedAt),
+            ),
+          )
+          .returning();
+        return row;
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to record run approval", { id });
+      }
+    },
+
+    // Atomic claim: sets rejected_at only if status=awaiting_approval and no decision recorded yet.
+    // Returns undefined if the claim was already taken (idempotent).
+    async recordRejection(id: string): Promise<Run | undefined> {
+      try {
+        const [row] = await db
+          .update(runs)
+          .set(withUpdatedAt({ rejectedAt: new Date() }))
+          .where(
+            and(
+              eq(runs.id, id),
+              eq(runs.status, "awaiting_approval"),
+              isNull(runs.approvedAt),
+              isNull(runs.rejectedAt),
+            ),
+          )
+          .returning();
+        return row;
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to record run rejection", { id });
+      }
+    },
+
+    // Rollback: clears a decision claim when the downstream waitpoint completion fails.
+    async clearApprovalDecision(id: string): Promise<void> {
+      try {
+        await db
+          .update(runs)
+          .set(withUpdatedAt({ approvedAt: null, approvedBy: null, rejectedAt: null }))
+          .where(eq(runs.id, id));
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to clear run approval decision", { id });
       }
     },
   };

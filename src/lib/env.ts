@@ -8,6 +8,10 @@ const envSchema = z.object({
   ADMIN_USERNAME: z.string().min(1),
   ADMIN_PASSWORD: z.string().min(1),
   SESSION_SECRET: z.string().min(32),
+  TELEGRAM_BOT_TOKEN: z.string().min(1),
+  TELEGRAM_CHAT_ID: z.string().min(1),
+  TELEGRAM_WEBHOOK_SECRET: z.string().min(1),
+  APP_BASE_URL: z.string().url(),
   SENTRY_DSN: z.string().url().optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
 });

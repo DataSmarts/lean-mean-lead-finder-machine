@@ -5,3 +5,4 @@ export { DbError, UniqueViolationError, wrapDbError } from "./db-error";
 export { GeocodeNotFoundError, GoogleRateLimitError } from "./google-error";
 export type { HttpErrorCode } from "./http-error";
 export { HttpError, HttpTimeoutError } from "./http-error";
+export { TelegramApiError } from "./telegram-error";

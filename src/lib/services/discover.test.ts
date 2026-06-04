@@ -30,6 +30,7 @@ function baseRun(overrides: Partial<Run> = {}): Run {
     approvedBy: null,
     rejectedAt: null,
     triggerRunId: null,
+    approvalWaitpointId: null,
     error: null,
     createdAt: new Date(0),
     updatedAt: new Date(0),

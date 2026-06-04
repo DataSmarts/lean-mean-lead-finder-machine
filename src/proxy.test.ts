@@ -73,4 +73,16 @@ describe("proxy", () => {
 
     expect(response.status).toBe(401);
   });
+
+  it("gates an unauthenticated dashboard approve request with 401", async () => {
+    const response = await proxy(requestFor("/api/runs/run-1/approve"));
+
+    expect(response.status).toBe(401);
+  });
+
+  it("gates an unauthenticated dashboard reject request with 401", async () => {
+    const response = await proxy(requestFor("/api/runs/run-1/reject"));
+
+    expect(response.status).toBe(401);
+  });
 });

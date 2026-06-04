@@ -8,6 +8,13 @@
       "when": 1780582356188,
       "tag": "0000_glossy_doorman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780594769102,
+      "tag": "0001_sudden_inertia",
+      "breakpoints": true
     }
   ]
 }
