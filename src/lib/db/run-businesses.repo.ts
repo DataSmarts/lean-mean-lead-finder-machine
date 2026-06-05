@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, ne } from "drizzle-orm";
 
 import { wrapDbError } from "@/lib/errors/db-error";
 
@@ -9,10 +9,10 @@ import { withUpdatedAt } from "./timestamp";
 
 export type RunBusiness = typeof runBusinesses.$inferSelect;
 
-type EnrichStatusValue = (typeof businessEnrichStatus.enumValues)[number];
-type SourceStatusValue = (typeof sourceStatus.enumValues)[number];
+export type EnrichStatusValue = (typeof businessEnrichStatus.enumValues)[number];
+export type SourceStatusValue = (typeof sourceStatus.enumValues)[number];
 
-interface StatusUpdate {
+export interface StatusUpdate {
   enrichStatus?: EnrichStatusValue;
   aiStatus?: SourceStatusValue;
   hunterStatus?: SourceStatusValue;
@@ -58,6 +58,15 @@ export function makeRunBusinessesRepo(db: AppDatabase) {
       }
     },
 
+    async findById(id: string): Promise<RunBusiness | undefined> {
+      try {
+        const rows = await db.select().from(runBusinesses).where(eq(runBusinesses.id, id));
+        return rows[0];
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to find run-business", { id });
+      }
+    },
+
     async updateStatus(id: string, update: StatusUpdate): Promise<RunBusiness | undefined> {
       try {
         const [row] = await db
@@ -68,6 +77,47 @@ export function makeRunBusinessesRepo(db: AppDatabase) {
         return row;
       } catch (cause) {
         throw wrapDbError(cause, "Failed to update run-business status", { id });
+      }
+    },
+
+    // Returns the most recent enriched/partial run_business for a business within the reuse window,
+    // excluding the current run (for the 30-day re-run reuse check — §7.4).
+    async findReusable(
+      businessId: string,
+      since: Date,
+      excludeRunId: string,
+    ): Promise<RunBusiness | undefined> {
+      try {
+        const rows = await db
+          .select()
+          .from(runBusinesses)
+          .where(
+            and(
+              eq(runBusinesses.businessId, businessId),
+              inArray(runBusinesses.enrichStatus, ["enriched", "partial"]),
+              gte(runBusinesses.enrichedAt, since),
+              ne(runBusinesses.runId, excludeRunId),
+            ),
+          )
+          .orderBy(desc(runBusinesses.enrichedAt))
+          .limit(1);
+        return rows[0];
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to find reusable run-business", { businessId });
+      }
+    },
+
+    // Groups run_businesses by enrich_status for finalize counter reconciliation.
+    async countByRun(runId: string): Promise<Partial<Record<EnrichStatusValue, number>>> {
+      try {
+        const rows = await db
+          .select({ enrichStatus: runBusinesses.enrichStatus, count: count() })
+          .from(runBusinesses)
+          .where(eq(runBusinesses.runId, runId))
+          .groupBy(runBusinesses.enrichStatus);
+        return Object.fromEntries(rows.map((r) => [r.enrichStatus, r.count]));
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to count run-businesses by status", { runId });
       }
     },
   };

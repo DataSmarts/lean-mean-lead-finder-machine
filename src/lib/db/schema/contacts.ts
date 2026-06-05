@@ -53,13 +53,11 @@ export const contacts = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    // §6.4 UNIQUE — NULLs are treated as distinct, so null-email contacts can coexist.
-    uniqueIndex("contacts_run_business_source_email_uidx").on(
-      table.runId,
-      table.businessId,
-      table.source,
-      table.email,
-    ),
+    // §6.4 UNIQUE — partial (kind='person' only) so merged rows can share emails with raw rows.
+    // NULLs are treated as distinct, so null-email person rows can coexist within the same source.
+    uniqueIndex("contacts_run_business_source_email_uidx")
+      .on(table.runId, table.businessId, table.source, table.email)
+      .where(sql`${table.kind} = 'person'`),
     index("contacts_run_business_idx").on(table.runId, table.businessId), // §6.4
     index("contacts_run_kind_idx").on(table.runId, table.kind), // §6.4
     // §6.4 functional index — case-insensitive email lookup

@@ -8,6 +8,8 @@ import { env } from "@/lib/env";
 import { type ApprovalDecisionPayload, buildApprovalPrompt } from "@/lib/services/approval";
 
 import { discoverTask } from "./discover.task";
+import { enrichFanOutTask } from "./enrich.task";
+import { finalizeRunTask } from "./finalize.task";
 
 const http = createHttpClient();
 const telegram = createTelegramClient({ http, botToken: env.TELEGRAM_BOT_TOKEN });
@@ -54,9 +56,10 @@ export const orchestrateTask = task({
       return;
     }
 
-    // Approved — park until DAT-42 (Enrich) replaces this marker.
-    // [Enrich] DAT-42 replaces this with enrich.fanOut
     await runsRepo.updateStatus(payload.runId, "enriching");
+    await enrichFanOutTask.triggerAndWait({ runId: payload.runId }).unwrap();
+    // finalize.run recomputes counters and sets status=completed|failed + finishedAt.
+    await finalizeRunTask.triggerAndWait({ runId: payload.runId }).unwrap();
 
     return discovery;
   },

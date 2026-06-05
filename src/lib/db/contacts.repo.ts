@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 
 import { wrapDbError } from "@/lib/errors/db-error";
 
@@ -83,6 +83,34 @@ export function makeContactsRepo(db: AppDatabase) {
           .where(and(eq(contacts.runId, runId), sql`lower(${contacts.email}) = lower(${email})`));
       } catch (cause) {
         throw wrapDbError(cause, "Failed to find contacts by email", { runId });
+      }
+    },
+
+    // Insert a kind='merged' row directly (no conflict target — merged rows are managed by
+    // delete-then-insert in the enrich transaction, so there is never an existing row to update).
+    async insertMerged(data: NewContact): Promise<Contact> {
+      try {
+        const [row] = await db.insert(contacts).values(data).returning();
+        if (!row) throw new Error("Insert returned no row");
+        return row;
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to insert merged contact", {
+          runId: data.runId,
+          businessId: data.businessId,
+        });
+      }
+    },
+
+    // Count of kind='merged' contacts for a run — used by finalize to set contactsFound.
+    async countMerged(runId: string): Promise<number> {
+      try {
+        const [row] = await db
+          .select({ count: count() })
+          .from(contacts)
+          .where(and(eq(contacts.runId, runId), eq(contacts.kind, "merged")));
+        return row?.count ?? 0;
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to count merged contacts", { runId });
       }
     },
   };
