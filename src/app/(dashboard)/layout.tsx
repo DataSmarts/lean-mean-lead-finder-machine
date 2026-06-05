@@ -22,6 +22,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className={styles.navDot} aria-hidden />
             Leads
           </Link>
+          <Link href="/presets" className={styles.navLink}>
+            <span className={styles.navDot} aria-hidden />
+            Presets
+          </Link>
           <Link href="/runs/new" className={styles.navLink}>
             <span className={styles.navDot} aria-hidden />
             New Run

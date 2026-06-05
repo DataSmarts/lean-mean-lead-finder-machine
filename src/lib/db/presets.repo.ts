@@ -54,6 +54,14 @@ export function makePresetsRepo(db: AppDatabase) {
       }
     },
 
+    async delete(id: string): Promise<void> {
+      try {
+        await db.delete(presets).where(eq(presets.id, id));
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to delete preset", { id });
+      }
+    },
+
     // Idempotent upsert by name — used by db:seed and the preset-management UI.
     async upsertByName(data: NewPreset): Promise<Preset> {
       try {

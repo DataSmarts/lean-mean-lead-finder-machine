@@ -25,6 +25,68 @@ const validInput = {
   maxResults: 120,
 };
 
+const validPreset = {
+  id: "preset-1",
+  neighborhood: null,
+  city: "Houston",
+  country: "USA",
+  niche: "family law attorney",
+  maxResults: 120,
+};
+
+describe("createRunService.createFromPreset", () => {
+  it("creates a run with triggerSource schedule and the preset id", async () => {
+    const { create, service } = setup();
+
+    await service.createFromPreset(validPreset);
+
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(create.mock.calls[0][0]).toMatchObject({
+      triggerSource: "schedule",
+      presetId: "preset-1",
+      status: "queued",
+    });
+  });
+
+  it("snapshots niche, location, and maxResults from the preset", async () => {
+    const { create, service } = setup();
+
+    await service.createFromPreset({
+      id: "p-2",
+      neighborhood: "Midtown",
+      city: "NYC",
+      country: "USA",
+      niche: "dentists",
+      maxResults: 50,
+    });
+
+    expect(create.mock.calls[0][0]).toMatchObject({
+      neighborhood: "Midtown",
+      city: "NYC",
+      country: "USA",
+      niche: "dentists",
+      maxResults: 50,
+    });
+  });
+
+  it("generates a non-empty approval token", async () => {
+    const { create, service } = setup();
+
+    await service.createFromPreset(validPreset);
+
+    expect(create.mock.calls[0][0].approvalToken).toEqual(expect.any(String));
+    expect((create.mock.calls[0][0].approvalToken as string).length).toBeGreaterThan(0);
+  });
+
+  it("returns the created run", async () => {
+    const { service } = setup();
+
+    const run = await service.createFromPreset(validPreset);
+
+    expect(run).toMatchObject({ id: "run-1" });
+  });
+});
+
 describe("createRunService.create", () => {
   it("inserts a run in queued status with the given trigger source", async () => {
     const { create, service } = setup();
