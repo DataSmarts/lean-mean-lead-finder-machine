@@ -1,0 +1,1 @@
+ALTER TABLE "presets" ADD COLUMN "schedule_id" text;

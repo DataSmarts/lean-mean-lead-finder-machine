@@ -11,6 +11,8 @@ export const presets = pgTable("presets", {
   maxResults: integer("max_results").notNull().default(120),
   isActive: boolean("is_active").notNull().default(true),
   cron: text("cron"),
+  // Trigger.dev schedule handle — populated after schedules.create(); null when no schedule is registered.
+  scheduleId: text("schedule_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
