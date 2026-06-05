@@ -9,6 +9,10 @@ const validBase = {
   ADMIN_USERNAME: "admin",
   ADMIN_PASSWORD: "correct horse battery staple",
   SESSION_SECRET: "0123456789abcdef0123456789abcdef",
+  TELEGRAM_BOT_TOKEN: "1234567890:test-token",
+  TELEGRAM_CHAT_ID: "987654321",
+  TELEGRAM_WEBHOOK_SECRET: "test-webhook-secret",
+  APP_BASE_URL: "http://localhost:3000",
 };
 
 describe("parseEnv", () => {
@@ -39,5 +43,29 @@ describe("parseEnv", () => {
 
   it("rejects a SESSION_SECRET shorter than 32 characters", () => {
     expect(() => parseEnv({ ...validBase, SESSION_SECRET: "too-short" })).toThrow("SESSION_SECRET");
+  });
+
+  it("throws when TELEGRAM_BOT_TOKEN is absent", () => {
+    const { TELEGRAM_BOT_TOKEN: _, ...rest } = validBase;
+    expect(() => parseEnv(rest)).toThrow("TELEGRAM_BOT_TOKEN");
+  });
+
+  it("throws when TELEGRAM_CHAT_ID is absent", () => {
+    const { TELEGRAM_CHAT_ID: _, ...rest } = validBase;
+    expect(() => parseEnv(rest)).toThrow("TELEGRAM_CHAT_ID");
+  });
+
+  it("throws when TELEGRAM_WEBHOOK_SECRET is absent", () => {
+    const { TELEGRAM_WEBHOOK_SECRET: _, ...rest } = validBase;
+    expect(() => parseEnv(rest)).toThrow("TELEGRAM_WEBHOOK_SECRET");
+  });
+
+  it("throws when APP_BASE_URL is absent", () => {
+    const { APP_BASE_URL: _, ...rest } = validBase;
+    expect(() => parseEnv(rest)).toThrow("APP_BASE_URL");
+  });
+
+  it("throws when APP_BASE_URL is not a valid URL", () => {
+    expect(() => parseEnv({ ...validBase, APP_BASE_URL: "not-a-url" })).toThrow("APP_BASE_URL");
   });
 });

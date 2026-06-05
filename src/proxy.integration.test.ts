@@ -17,6 +17,8 @@ describe("proxy matcher", () => {
     ["/runs/123", true],
     ["/leads", true],
     ["/api/runs", true],
+    ["/api/runs/run-1/approve", true],
+    ["/api/runs/run-1/reject", true],
     ["/api/telegram/webhook", true],
     ["/login", false],
     ["/_next/static/chunk.js", false],

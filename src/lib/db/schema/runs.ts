@@ -36,6 +36,8 @@ export const runs = pgTable(
     rejectedAt: timestamp("rejected_at", { withTimezone: true }),
     // Trigger.dev run handle; opaque string reference
     triggerRunId: text("trigger_run_id"),
+    // Trigger.dev waitpoint token id (waitpoint_…); set when the approval gate suspends
+    approvalWaitpointId: text("approval_waitpoint_id"),
     error: text("error"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

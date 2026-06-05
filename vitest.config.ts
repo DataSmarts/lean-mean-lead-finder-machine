@@ -12,6 +12,10 @@ export default defineConfig({
       ADMIN_USERNAME: "test-admin",
       ADMIN_PASSWORD: "test-password",
       SESSION_SECRET: "test-session-secret-at-least-32-bytes-long",
+      TELEGRAM_BOT_TOKEN: "1234567890:test-telegram-bot-token",
+      TELEGRAM_CHAT_ID: "987654321",
+      TELEGRAM_WEBHOOK_SECRET: "test-webhook-secret",
+      APP_BASE_URL: "http://localhost:3000",
     },
     projects: [
       {
