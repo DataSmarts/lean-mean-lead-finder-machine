@@ -21,6 +21,8 @@ export function makeContactsRepo(db: AppDatabase) {
           .values(data)
           .onConflictDoUpdate({
             target: [contacts.runId, contacts.businessId, contacts.source, contacts.email],
+            // Partial index predicate — must match the WHERE clause on contacts_run_business_source_email_uidx.
+            targetWhere: sql`${contacts.kind} = 'person'`,
             set: {
               fullName: data.fullName,
               firstName: data.firstName,
