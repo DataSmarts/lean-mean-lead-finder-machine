@@ -1,0 +1,104 @@
+.container {
+  margin-bottom: 1.75rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(180deg, rgba(20, 22, 25, 0.92), rgba(13, 14, 16, 0.92));
+  border: 1px solid rgba(233, 176, 74, 0.3);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(233, 176, 74, 0.05),
+    0 20px 40px -20px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.label {
+  margin: 0 0 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.description {
+  margin: 0 0 1rem;
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+}
+
+.buttons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.approveBtn {
+  padding: 0.65rem 1.25rem;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #131313;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition:
+    filter 0.15s ease,
+    transform 0.1s ease;
+}
+
+.approveBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.approveBtn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.approveBtn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.rejectBtn {
+  padding: 0.65rem 1.25rem;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--danger);
+  background: transparent;
+  border: 1px solid var(--danger);
+  border-radius: 3px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.rejectBtn:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+
+.rejectBtn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.rejectBtn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.error {
+  margin-top: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid rgba(226, 112, 90, 0.3);
+  border-radius: 3px;
+}

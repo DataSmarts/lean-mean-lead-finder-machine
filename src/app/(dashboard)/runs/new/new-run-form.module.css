@@ -1,0 +1,147 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.optional {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim);
+  opacity: 0.6;
+  margin-left: 0.4rem;
+  text-transform: none;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  outline: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+  appearance: none;
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b8a85' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+}
+
+.select option {
+  background: #1a1d21;
+}
+
+.divider {
+  height: 1px;
+  background: var(--line);
+  margin: 0.25rem 0;
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkboxLabel {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim);
+}
+
+.fieldError {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--danger);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid rgba(226, 112, 90, 0.3);
+  border-radius: 3px;
+}
+
+.error span {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.submit {
+  margin-top: 0.25rem;
+  padding: 0.8rem 1rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #131313;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition:
+    filter 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.18s ease;
+}
+
+.submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 20px -8px var(--accent);
+}
+
+.submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}

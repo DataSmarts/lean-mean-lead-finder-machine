@@ -1,0 +1,126 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.logoArea {
+  padding: 0 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1rem;
+}
+
+.wordmark {
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.35rem;
+  color: var(--accent);
+  margin: 0;
+  line-height: 1;
+}
+
+.tagline {
+  margin: 0.3rem 0 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0 0.75rem;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-decoration: none;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.navLink:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.navLinkActive {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: rgba(233, 176, 74, 0.2);
+}
+
+.navDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.sidebarFooter {
+  padding: 1rem 1.25rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.logoutBtn {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+  text-align: center;
+}
+
+.logoutBtn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg);
+  min-width: 0;
+}
