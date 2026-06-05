@@ -15,6 +15,13 @@
       "when": 1780594769102,
       "tag": "0001_sudden_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780677209442,
+      "tag": "0002_fancy_slyde",
+      "breakpoints": true
     }
   ]
 }

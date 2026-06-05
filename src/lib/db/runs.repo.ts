@@ -137,6 +137,24 @@ export function makeRunsRepo(db: AppDatabase) {
       }
     },
 
+    // Authoritatively sets all three enrichment counters in one write (used by finalize.run).
+    // Preferred over repeated incrementCounter calls to avoid accumulation errors on re-runs.
+    async setCounters(
+      id: string,
+      counters: { businessesEnriched: number; businessesFailed: number; contactsFound: number },
+    ): Promise<Run | undefined> {
+      try {
+        const [row] = await db
+          .update(runs)
+          .set(withUpdatedAt(counters))
+          .where(eq(runs.id, id))
+          .returning();
+        return row;
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to set run counters", { id });
+      }
+    },
+
     // Rollback: clears a decision claim when the downstream waitpoint completion fails.
     async clearApprovalDecision(id: string): Promise<void> {
       try {
