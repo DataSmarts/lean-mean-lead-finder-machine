@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
 
 import { wrapDbError } from "@/lib/errors/db-error";
 
@@ -14,6 +14,19 @@ export type NewRun = Omit<typeof runs.$inferInsert, "id" | "createdAt" | "update
 export type RunStatusValue = (typeof runStatus.enumValues)[number];
 
 type CounterField = "businessesFound" | "businessesEnriched" | "businessesFailed" | "contactsFound";
+
+export interface RunsListResult {
+  runs: Run[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface RunsListParams {
+  page: number;
+  pageSize?: number;
+  status?: RunStatusValue;
+}
 
 export function makeRunsRepo(db: AppDatabase) {
   return {
@@ -152,6 +165,28 @@ export function makeRunsRepo(db: AppDatabase) {
         return row;
       } catch (cause) {
         throw wrapDbError(cause, "Failed to set run counters", { id });
+      }
+    },
+
+    // Lists runs ordered by created_at desc (uses runs_status_created_at_idx).
+    // Supports optional status filter and offset-based pagination.
+    async list({ page, pageSize = 20, status }: RunsListParams): Promise<RunsListResult> {
+      const offset = (page - 1) * pageSize;
+      const where = status ? eq(runs.status, status) : undefined;
+      try {
+        const [rows, [countRow]] = await Promise.all([
+          db
+            .select()
+            .from(runs)
+            .where(where)
+            .orderBy(desc(runs.createdAt))
+            .limit(pageSize)
+            .offset(offset),
+          db.select({ total: count() }).from(runs).where(where),
+        ]);
+        return { runs: rows, total: countRow?.total ?? 0, page, pageSize };
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to list runs", { page, pageSize, status });
       }
     },
 

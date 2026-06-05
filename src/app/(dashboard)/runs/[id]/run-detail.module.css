@@ -1,0 +1,20 @@
+.page {
+  padding: 2.5rem 2.5rem 4rem;
+  position: relative;
+  min-height: 100%;
+}
+
+.glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 450px at 60% -5%, rgba(233, 176, 74, 0.06), transparent 60%),
+    radial-gradient(700px 400px at 95% 100%, rgba(80, 120, 200, 0.04), transparent 55%);
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+}

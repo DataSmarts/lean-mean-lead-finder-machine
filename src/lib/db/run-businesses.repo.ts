@@ -1,10 +1,11 @@
-import { and, count, desc, eq, gte, inArray, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableColumns, gte, inArray, ne } from "drizzle-orm";
 
 import { wrapDbError } from "@/lib/errors/db-error";
 
+import type { Business } from "./businesses.repo";
 import type { AppDatabase } from "./client";
 import type { businessEnrichStatus, sourceStatus } from "./schema";
-import { runBusinesses } from "./schema";
+import { businesses, runBusinesses } from "./schema";
 import { withUpdatedAt } from "./timestamp";
 
 export type RunBusiness = typeof runBusinesses.$inferSelect;
@@ -55,6 +56,27 @@ export function makeRunBusinessesRepo(db: AppDatabase) {
         return await db.select().from(runBusinesses).where(eq(runBusinesses.runId, runId));
       } catch (cause) {
         throw wrapDbError(cause, "Failed to list run-businesses", { runId });
+      }
+    },
+
+    // Joins run_businesses to businesses, ordered by business name for stable display.
+    // Uses explicit column selection to produce a clean { runBusiness, business } shape.
+    async findByRunWithBusiness(
+      runId: string,
+    ): Promise<{ runBusiness: RunBusiness; business: Business }[]> {
+      try {
+        const rows = await db
+          .select({
+            runBusiness: getTableColumns(runBusinesses),
+            business: getTableColumns(businesses),
+          })
+          .from(runBusinesses)
+          .innerJoin(businesses, eq(runBusinesses.businessId, businesses.id))
+          .where(eq(runBusinesses.runId, runId))
+          .orderBy(asc(businesses.name));
+        return rows;
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to list run-businesses with business", { runId });
       }
     },
 

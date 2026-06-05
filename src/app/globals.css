@@ -7,6 +7,9 @@
   --accent: #e9b04a;
   --accent-soft: rgba(233, 176, 74, 0.14);
   --danger: #e2705a;
+  --danger-soft: rgba(226, 112, 90, 0.12);
+  --success: #4caf82;
+  --success-soft: rgba(76, 175, 130, 0.12);
 }
 
 * {
