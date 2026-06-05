@@ -18,6 +18,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className={styles.navDot} aria-hidden />
             Runs
           </Link>
+          <Link href="/leads" className={styles.navLink}>
+            <span className={styles.navDot} aria-hidden />
+            Leads
+          </Link>
           <Link href="/runs/new" className={styles.navLink}>
             <span className={styles.navDot} aria-hidden />
             New Run

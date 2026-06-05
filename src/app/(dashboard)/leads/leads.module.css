@@ -1,0 +1,607 @@
+/* ─── Layout ─────────────────────────────────────────────────── */
+
+.page {
+  padding: 2.5rem 2.5rem 4rem;
+  position: relative;
+  min-height: 100%;
+}
+
+.glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 450px at 60% -5%, rgba(233, 176, 74, 0.06), transparent 60%),
+    radial-gradient(700px 400px at 95% 100%, rgba(76, 175, 130, 0.04), transparent 55%);
+  z-index: 0;
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+
+.header {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 2rem;
+}
+
+.kicker {
+  margin: 0 0 0.4rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 2.2rem;
+  line-height: 1;
+  color: var(--ink);
+}
+
+/* ─── Filter Form ─────────────────────────────────────────────── */
+
+.filterForm {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(20, 22, 25, 0.9), rgba(13, 14, 16, 0.9));
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  backdrop-filter: blur(4px);
+}
+
+.filterRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.filterLabel {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+
+.filterInput,
+.filterSelect {
+  height: 2rem;
+  padding: 0 0.65rem;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  appearance: none;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+  min-width: 0;
+}
+
+.filterInput {
+  width: 180px;
+}
+
+.filterSelect {
+  width: 140px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b8a85'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+  padding-right: 1.75rem;
+  cursor: pointer;
+}
+
+.filterInput:focus,
+.filterSelect:focus {
+  border-color: rgba(233, 176, 74, 0.45);
+  background: rgba(233, 176, 74, 0.04);
+}
+
+.filterInput::placeholder {
+  color: rgba(139, 138, 133, 0.5);
+}
+
+.filterActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-end;
+}
+
+.filterSubmit {
+  height: 2rem;
+  padding: 0 0.85rem;
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #131313;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+  white-space: nowrap;
+}
+
+.filterSubmit:hover {
+  filter: brightness(1.08);
+}
+
+.filterClear {
+  height: 2rem;
+  padding: 0 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.filterClear:hover {
+  color: var(--ink);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ─── Toolbar ─────────────────────────────────────────────────── */
+
+.toolbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.totalCount {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim);
+}
+
+.exportLink {
+  padding: 0.4rem 0.85rem;
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid rgba(233, 176, 74, 0.35);
+  border-radius: 3px;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.exportLink:hover {
+  background: var(--accent-soft);
+  border-color: rgba(233, 176, 74, 0.55);
+}
+
+/* ─── Panel ───────────────────────────────────────────────────── */
+
+.panel {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(20, 22, 25, 0.92), rgba(13, 14, 16, 0.92));
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 40px 80px -40px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+  overflow: hidden;
+}
+
+.frame {
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  opacity: 0.5;
+  --tick: linear-gradient(var(--accent), var(--accent));
+  background:
+    var(--tick) 0 0 / 10px 1px no-repeat,
+    var(--tick) 0 0 / 1px 10px no-repeat,
+    var(--tick) 100% 0 / 10px 1px no-repeat,
+    var(--tick) 100% 0 / 1px 10px no-repeat,
+    var(--tick) 0 100% / 10px 1px no-repeat,
+    var(--tick) 0 100% / 1px 10px no-repeat,
+    var(--tick) 100% 100% / 10px 1px no-repeat,
+    var(--tick) 100% 100% / 1px 10px no-repeat;
+}
+
+/* ─── Table ───────────────────────────────────────────────────── */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.thead th {
+  padding: 0.7rem 0.85rem;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.leadRow {
+  border-bottom: 1px solid rgba(38, 40, 44, 0.6);
+  transition: background 0.1s ease;
+}
+
+.leadRow:last-child {
+  border-bottom: none;
+}
+
+.leadRow:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.leadRow td {
+  padding: 0.75rem 0.85rem;
+  font-size: 0.78rem;
+  color: var(--ink);
+  vertical-align: top;
+}
+
+/* ─── Business Cell ───────────────────────────────────────────── */
+
+.businessCell {
+  width: 18%;
+}
+
+.businessName {
+  display: block;
+  font-weight: 500;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.businessMeta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.68rem;
+  color: var(--ink-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+a.businessMeta:hover {
+  color: var(--accent);
+}
+
+/* ─── Person Cell ─────────────────────────────────────────────── */
+
+.personCell {
+  width: 14%;
+}
+
+.personName {
+  display: block;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.personTitle {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.68rem;
+  color: var(--ink-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Email Cell ──────────────────────────────────────────────── */
+
+.emailCell {
+  width: 20%;
+}
+
+.emailAddress {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emailAddress:hover {
+  color: var(--accent);
+}
+
+.emailMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.confidence {
+  font-size: 0.62rem;
+  font-weight: 600;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.05em;
+  color: var(--ink-dim);
+  padding: 0.1rem 0.35rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+/* ─── Source Badges ───────────────────────────────────────────── */
+
+.sourceBadges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sourceBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  white-space: nowrap;
+  width: fit-content;
+}
+
+.sourceBadgeAi {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid rgba(233, 176, 74, 0.25);
+}
+
+.sourceBadgeHunter {
+  color: var(--success);
+  background: var(--success-soft);
+  border: 1px solid rgba(76, 175, 130, 0.25);
+}
+
+/* ─── Socials ─────────────────────────────────────────────────── */
+
+.socials {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.3rem;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  text-decoration: none;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+
+.socialLink:hover {
+  color: var(--accent);
+  border-color: rgba(233, 176, 74, 0.35);
+  background: var(--accent-soft);
+}
+
+/* ─── Utility text cells ──────────────────────────────────────── */
+
+.niche {
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.location {
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+
+/* ─── Status Badges (shared pattern) ─────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.42rem;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.badgeMuted {
+  color: var(--ink-dim);
+  background: rgba(139, 138, 133, 0.1);
+  border: 1px solid rgba(139, 138, 133, 0.2);
+}
+
+.badgeActive {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid rgba(233, 176, 74, 0.25);
+}
+
+.badgeSuccess {
+  color: var(--success);
+  background: var(--success-soft);
+  border: 1px solid rgba(76, 175, 130, 0.25);
+}
+
+.badgeDanger {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid rgba(226, 112, 90, 0.25);
+}
+
+.badgeDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ─── Empty State ─────────────────────────────────────────────── */
+
+.emptyState {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.emptyNote {
+  margin: 0 0 1.5rem;
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+}
+
+.emptyAction {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #131313;
+  background: var(--accent);
+  border-radius: 3px;
+  text-decoration: none;
+  transition: filter 0.15s ease;
+}
+
+.emptyAction:hover {
+  filter: brightness(1.08);
+}
+
+/* ─── Pagination ──────────────────────────────────────────────── */
+
+.pagination {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.pageInfo {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim);
+}
+
+.pageButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pageBtn {
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.pageBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.pageBtnDisabled {
+  opacity: 0.3;
+  pointer-events: none;
+}

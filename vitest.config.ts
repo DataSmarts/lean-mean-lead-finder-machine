@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     environment: "node",
+    setupFiles: ["src/test/setup.ts"],
     env: {
       DATABASE_URL: "postgresql://test:test@localhost/test",
       DATABASE_URL_UNPOOLED: "postgresql://test:test@localhost/test",
