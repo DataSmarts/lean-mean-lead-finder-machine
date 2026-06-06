@@ -316,8 +316,7 @@ All validated via `src/lib/env.ts` (Zod) at boot. `DATABASE_URL*` already provis
 **Open decisions to confirm:**
 3. **Business dedupe scope** → recommended **global** (one `businesses` row per place + `run_businesses` link). Alternative: strict per-run isolation.
 4. **Hunter contact volume** → keep legacy `limit:5` executive/management, or widen (more leads, more cost)?
-5. **CLAUDE.md** currently describes a sequential Discover → Enrich → Verify flow; this architecture runs AI + Hunter **in parallel and merges**. CLAUDE.md should be updated to match.
-6. **Provenance storage** → `jsonb` `field_sources` (recommended) vs a separate `contact_field_provenance` table.
+5. **Provenance storage** → `jsonb` `field_sources` (recommended) vs a separate `contact_field_provenance` table.
 
 ## 17. Suggested Build Sequence
 
