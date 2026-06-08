@@ -16,17 +16,6 @@ import { createHunterEnrichService } from "@/lib/services/hunter-enrich";
 // Controls fan-out concurrency and provider request volume.
 export const ENRICH_BATCH_SIZE = 25;
 
-const http = createHttpClient();
-const hunterClient = createHunterClient({
-  http,
-  apiKey: env.HUNTER_API_KEY,
-  limit: env.HUNTER_LIMIT,
-});
-const openRouterClient = createOpenRouterClient({
-  http,
-  apiKey: env.OPENROUTER_API_KEY,
-  model: env.OPENROUTER_MODEL,
-});
 const { persist, persistReuse } = createEnrichWriter(dbDirect);
 
 // Chunks an array into sub-arrays of at most `size` elements. Pure helper.
@@ -44,6 +33,9 @@ export const enrichBusinessTask = task({
   id: "enrich.business",
   retry: { maxAttempts: 3, factor: 2, minTimeoutInMs: 1000, maxTimeoutInMs: 30_000 },
   run: async (payload: { runBusinessId: string }) => {
+    const http = createHttpClient();
+    const hunterClient = createHunterClient({ http, apiKey: env.HUNTER_API_KEY, limit: env.HUNTER_LIMIT });
+    const openRouterClient = createOpenRouterClient({ http, apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_MODEL });
     const service = createEnrichService({
       runBusinessesRepo: makeRunBusinessesRepo(dbDirect),
       businessesRepo: makeBusinessesRepo(dbDirect),
