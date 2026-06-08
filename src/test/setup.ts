@@ -1,5 +1,7 @@
 import { webcrypto } from "node:crypto";
 
-// Vitest's Node VM context doesn't expose globalThis.crypto by default.
-// Node 18+ has Web Crypto under node:crypto; this polyfill bridges the gap.
-(globalThis as unknown as { crypto: typeof webcrypto }).crypto = webcrypto;
+// Node 18-21: globalThis.crypto is absent — polyfill it.
+// Node 22+: it's a non-writable native getter; skip the assignment.
+if (!globalThis.crypto) {
+  Object.defineProperty(globalThis, "crypto", { value: webcrypto, configurable: true });
+}
