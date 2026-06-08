@@ -132,7 +132,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
                   .filter(Boolean)
                   .join(", ");
                 return (
-                  <tr key={run.id} onClick={() => {}} aria-label={run.niche}>
+                  <tr key={run.id} aria-label={run.niche}>
                     <td>
                       <Link href={`/runs/${run.id}`} className={styles.rowLink}>
                         <span className={styles.niche}>{run.niche}</span>
