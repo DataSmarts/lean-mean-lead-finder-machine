@@ -11,14 +11,13 @@ import { discoverTask } from "./discover.task";
 import { enrichFanOutTask } from "./enrich.task";
 import { finalizeRunTask } from "./finalize.task";
 
-const http = createHttpClient();
-const telegram = createTelegramClient({ http, botToken: env.TELEGRAM_BOT_TOKEN });
-
 // Root task — the single entry point all triggers (form, API, schedule) funnel through.
 // APPEND-ONLY: downstream slices add their stage after the approval gate; never reorder or fork.
 export const orchestrateTask = task({
   id: "leadRun.orchestrate",
   run: async (payload: { runId: string }) => {
+    const http = createHttpClient();
+    const telegram = createTelegramClient({ http, botToken: env.TELEGRAM_BOT_TOKEN });
     const runsRepo = makeRunsRepo(dbDirect);
 
     await runsRepo.updateStatus(payload.runId, "discovering", { startedAt: new Date() });

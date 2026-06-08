@@ -10,15 +10,15 @@ import { makeRunsRepo } from "@/lib/db/runs.repo";
 import { env } from "@/lib/env";
 import { createDiscoverService } from "@/lib/services/discover";
 
-const http = createHttpClient();
-const geocodingClient = createGeocodingClient({ http, apiKey: env.GOOGLE_MAPS_API_KEY });
-const placesClient = createPlacesClient({ http, apiKey: env.GOOGLE_MAPS_API_KEY });
 const persistPage = createPersistDiscoveryPage(dbDirect);
 
 export const discoverTask = task({
   id: "discover.run",
   retry: { maxAttempts: 3 },
   run: async (payload: { runId: string }) => {
+    const http = createHttpClient();
+    const geocodingClient = createGeocodingClient({ http, apiKey: env.GOOGLE_MAPS_API_KEY });
+    const placesClient = createPlacesClient({ http, apiKey: env.GOOGLE_MAPS_API_KEY });
     const service = createDiscoverService({
       geocodingClient,
       placesClient,

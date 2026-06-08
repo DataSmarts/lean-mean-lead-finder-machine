@@ -31,4 +31,20 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
   return result.data;
 }
 
-export const env = parseEnv();
+let _parsed: Env | undefined;
+
+function getEnv(): Env {
+  if (!_parsed) {
+    _parsed = parseEnv();
+  }
+  return _parsed;
+}
+
+// Lazy proxy: validation runs on first property access, not at module load.
+// This prevents build-time failures (Vercel, Trigger.dev) when env vars are
+// absent from the build environment but present at runtime.
+export const env: Env = new Proxy({} as Env, {
+  get(_, prop: string | symbol) {
+    return getEnv()[prop as keyof Env];
+  },
+});
