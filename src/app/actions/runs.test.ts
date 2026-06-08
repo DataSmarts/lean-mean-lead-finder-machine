@@ -144,6 +144,19 @@ describe("createRun action", () => {
     );
   });
 
+  it("succeeds when neighborhood is an empty string (treats it as omitted)", async () => {
+    const { create } = setupService();
+    setupPresets();
+
+    // redirect() is mocked (no throw), so createRun returns undefined on success.
+    await createRun({}, formWith({ ...validFields, neighborhood: "" }));
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining<Partial<CreateRunInput>>({ neighborhood: undefined }),
+    );
+    expect(redirectMock).toHaveBeenCalled();
+  });
+
   it("does not call upsertByName when saveAsPreset is not set", async () => {
     const { create } = setupService();
     const { upsertByName } = setupPresets();

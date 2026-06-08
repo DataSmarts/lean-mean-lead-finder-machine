@@ -20,7 +20,7 @@ export async function createRun(
   // Build the input object — maxResults comes from FormData as a string, so coerce it.
   const rawMaxResults = formData.get("maxResults");
   const input = {
-    neighborhood: formData.get("neighborhood") ?? undefined,
+    neighborhood: (formData.get("neighborhood") as string) || undefined,
     city: formData.get("city"),
     country: formData.get("country"),
     niche: formData.get("niche"),
