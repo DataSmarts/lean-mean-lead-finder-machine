@@ -134,7 +134,7 @@ describe("createEnrichWriter.persist (integration)", () => {
     expect(updatedRun!.contactsFound).toBe(1);
   });
 
-  it("is idempotent on retry (upsert + delete-then-insert merged)", async () => {
+  it("is idempotent on retry when raw contacts have no email", async () => {
     if (skipIfNoDb() || !db) return;
 
     const runsRepo = makeRunsRepo(db);
@@ -183,7 +183,7 @@ describe("createEnrichWriter.persist (integration)", () => {
             firstName: "Bob",
             lastName: "Smith",
             title: null,
-            email: "bob@test.com",
+            email: null,
             emailConfidence: null,
             emailVerification: "unverified" as const,
             seniority: null,
@@ -210,7 +210,7 @@ describe("createEnrichWriter.persist (integration)", () => {
           firstName: "Bob",
           lastName: "Smith",
           title: null,
-          email: "bob@test.com",
+          email: null,
           emailConfidence: null,
           emailVerification: "unverified" as const,
           seniority: null,
@@ -221,7 +221,7 @@ describe("createEnrichWriter.persist (integration)", () => {
           twitterUrl: null,
           facebookUrl: null,
           mergedIntoId: null,
-          fieldSources: { email: "ai" as const },
+          fieldSources: { full_name: "ai" as const },
           raw: null,
         },
       ],
@@ -240,6 +240,7 @@ describe("createEnrichWriter.persist (integration)", () => {
     const contactsRepo = makeContactsRepo(db);
     const all = await contactsRepo.findByRunAndBusiness(run.id, biz.id);
     expect(all.filter((c) => c.kind === "merged")).toHaveLength(1);
+    expect(all.filter((c) => c.kind === "person")).toHaveLength(1);
 
     // Counter not double-counted on retry (prevEnrichStatus='enriched' was terminal).
     const updatedRun = await runsRepo.findById(run.id);

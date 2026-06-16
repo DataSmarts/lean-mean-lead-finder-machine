@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { HttpError } from "@/lib/errors/http-error";
+
 import { createPlacesClient } from "./google-places";
 import type { HttpClient } from "./http";
 
@@ -84,5 +86,12 @@ describe("createPlacesClient.searchText", () => {
     expect(result.places[0]).toMatchObject({ id: "places/x", name: "X", types: [] });
     expect(result.places[0].websiteUri).toBeUndefined();
     expect(result.nextPageToken).toBeUndefined();
+  });
+
+  it("wraps invalid provider payloads in HttpError", async () => {
+    const { http } = fakeHttp({ places: [{ displayName: { text: "Missing ID" } }] });
+    const client = createPlacesClient({ http, apiKey: "test-key" });
+
+    await expect(client.searchText({ textQuery: "q", center })).rejects.toBeInstanceOf(HttpError);
   });
 });

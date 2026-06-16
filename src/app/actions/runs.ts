@@ -1,11 +1,12 @@
 "use server";
 
-import { tasks } from "@trigger.dev/sdk";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { createLeadRunTrigger } from "@/lib/clients/trigger";
 import { db } from "@/lib/db/client";
 import { makePresetsRepo } from "@/lib/db/presets.repo";
+import { createDashboardRunLaunchService } from "@/lib/services/dashboard-run-launch";
 import { createRunService } from "@/lib/services/run";
 import { createRunSchema, saveAsPresetSchema } from "@/lib/validation/runs";
 
@@ -42,29 +43,15 @@ export async function createRun(
     return { error: "A preset name is required when saving as preset." };
   }
 
-  let presetId: string | null = null;
-  if (presetParsed.data.saveAsPreset && presetParsed.data.presetName) {
-    const presetsRepo = makePresetsRepo(db);
-    const preset = await presetsRepo.upsertByName({
-      name: presetParsed.data.presetName,
-      city: parsed.data.city,
-      country: parsed.data.country,
-      niche: parsed.data.niche,
-      neighborhood: parsed.data.neighborhood ?? null,
-      maxResults: parsed.data.maxResults,
-      isActive: true,
-      cron: null,
-    });
-    presetId = preset.id;
-  }
-
-  const run = await createRunService({ db }).create({
+  const launchService = createDashboardRunLaunchService({
+    presetsRepo: makePresetsRepo(db),
+    runService: createRunService({ db, trigger: createLeadRunTrigger() }),
+  });
+  const run = await launchService.launch({
     ...parsed.data,
-    triggerSource: "dashboard",
-    presetId,
+    presetName: presetParsed.data.saveAsPreset ? presetParsed.data.presetName : undefined,
   });
 
-  await tasks.trigger("leadRun.orchestrate", { runId: run.id });
   revalidatePath("/runs");
 
   // redirect() throws a control-flow signal — must stay outside any try/catch.

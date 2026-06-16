@@ -7,4 +7,5 @@ export { GeocodeNotFoundError, GoogleRateLimitError } from "./google-error";
 export type { HttpErrorCode } from "./http-error";
 export { HttpError, HttpTimeoutError } from "./http-error";
 export { HunterQuotaExhaustedError, HunterRateLimitError } from "./hunter-error";
+export { PipelineStateError } from "./pipeline-error";
 export { TelegramApiError } from "./telegram-error";

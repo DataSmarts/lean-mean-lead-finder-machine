@@ -1,11 +1,13 @@
 "use server";
 
-import { schedules, tasks } from "@trigger.dev/sdk";
+import { schedules } from "@trigger.dev/sdk";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { createLeadRunTrigger } from "@/lib/clients/trigger";
 import { db } from "@/lib/db/client";
 import { makePresetsRepo } from "@/lib/db/presets.repo";
+import { createPresetManagementService } from "@/lib/services/preset-management";
 import type { ScheduleOps } from "@/lib/services/preset-schedule";
 import { createPresetScheduleService } from "@/lib/services/preset-schedule";
 import { createRunService } from "@/lib/services/run";
@@ -27,6 +29,14 @@ const scheduleOps: ScheduleOps = {
 };
 
 const scheduleService = createPresetScheduleService({ scheduleOps });
+
+function makePresetManagementService() {
+  return createPresetManagementService({
+    presetsRepo: makePresetsRepo(db),
+    scheduleService,
+    runService: createRunService({ db, trigger: createLeadRunTrigger() }),
+  });
+}
 
 export async function savePreset(
   _prevState: PresetActionState,
@@ -52,29 +62,9 @@ export async function savePreset(
     return { error: firstIssue?.message ?? "Invalid input. Please check all fields." };
   }
 
-  const { id, ...presetData } = parsed.data;
-  const presetsRepo = makePresetsRepo(db);
-
-  let preset = id ? await presetsRepo.findById(id) : undefined;
-  if (id && !preset) {
+  const result = await makePresetManagementService().save(parsed.data);
+  if (result.status === "not_found") {
     return { error: "Preset not found." };
-  }
-
-  if (preset) {
-    preset = (await presetsRepo.update(preset.id, presetData)) ?? preset;
-  } else {
-    preset = await presetsRepo.create(presetData);
-  }
-
-  const newScheduleId = await scheduleService.sync({
-    id: preset.id,
-    scheduleId: preset.scheduleId ?? null,
-    isActive: preset.isActive,
-    cron: preset.cron ?? null,
-  });
-
-  if (newScheduleId !== (preset.scheduleId ?? null)) {
-    await presetsRepo.update(preset.id, { scheduleId: newScheduleId ?? undefined });
   }
 
   revalidatePath("/presets");
@@ -82,50 +72,26 @@ export async function savePreset(
 }
 
 export async function togglePresetActive(presetId: string): Promise<PresetActionState> {
-  const presetsRepo = makePresetsRepo(db);
-  const preset = await presetsRepo.findById(presetId);
-  if (!preset) return { error: "Preset not found." };
-
-  const updated = await presetsRepo.update(presetId, { isActive: !preset.isActive });
-  if (!updated) return { error: "Failed to update preset." };
-
-  const newScheduleId = await scheduleService.sync({
-    id: updated.id,
-    scheduleId: updated.scheduleId ?? null,
-    isActive: updated.isActive,
-    cron: updated.cron ?? null,
-  });
-
-  if (newScheduleId !== (updated.scheduleId ?? null)) {
-    await presetsRepo.update(updated.id, { scheduleId: newScheduleId ?? undefined });
-  }
+  const result = await makePresetManagementService().toggleActive(presetId);
+  if (result.status === "not_found") return { error: "Preset not found." };
+  if (result.status === "failed") return { error: "Failed to update preset." };
 
   revalidatePath("/presets");
   return {};
 }
 
 export async function deletePreset(presetId: string): Promise<PresetActionState> {
-  const presetsRepo = makePresetsRepo(db);
-  const preset = await presetsRepo.findById(presetId);
-  if (!preset) return { error: "Preset not found." };
+  const result = await makePresetManagementService().delete(presetId);
+  if (result.status === "not_found") return { error: "Preset not found." };
 
-  if (preset.scheduleId) {
-    await scheduleService.remove(preset.scheduleId);
-  }
-
-  await presetsRepo.delete(presetId);
   revalidatePath("/presets");
   return {};
 }
 
 export async function runPresetNow(presetId: string): Promise<PresetActionState> {
-  const presetsRepo = makePresetsRepo(db);
-  const preset = await presetsRepo.findById(presetId);
-  if (!preset) return { error: "Preset not found." };
-
-  const run = await createRunService({ db }).createFromPreset(preset);
-  await tasks.trigger("leadRun.orchestrate", { runId: run.id });
+  const result = await makePresetManagementService().runNow(presetId);
+  if (result.status === "not_found") return { error: "Preset not found." };
 
   // redirect() throws a control-flow signal — must stay outside any try/catch.
-  redirect(`/runs/${run.id}`);
+  redirect(`/runs/${result.runId}`);
 }

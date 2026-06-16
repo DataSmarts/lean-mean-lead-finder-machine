@@ -141,7 +141,14 @@ export function createOpenRouterClient({
       },
       { context: { businessName: params.businessName } },
     );
-    return completionResponseSchema.parse(raw).choices[0]!.message.content;
+    const parsed = completionResponseSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new AiOutputParseError("OpenRouter response envelope failed schema validation", {
+        cause: parsed.error,
+        context: { businessName: params.businessName },
+      });
+    }
+    return parsed.data.choices[0]!.message.content;
   }
 
   function parseContent(content: string, businessName: string): OpenRouterContact | null {
@@ -154,7 +161,14 @@ export function createOpenRouterClient({
         context: { businessName },
       });
     }
-    const validated = leadRawSchema.parse(parsed);
+    const validatedResult = leadRawSchema.safeParse(parsed);
+    if (!validatedResult.success) {
+      throw new AiOutputParseError("OpenRouter content failed schema validation", {
+        cause: validatedResult.error,
+        context: { businessName },
+      });
+    }
+    const validated = validatedResult.data;
     const contact: OpenRouterContact = {
       fullName: normalizeNa(validated.full_name),
       firstName: normalizeNa(validated.first_name),

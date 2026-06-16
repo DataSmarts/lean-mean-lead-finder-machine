@@ -1,4 +1,4 @@
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq, isNull, sql } from "drizzle-orm";
 
 import { wrapDbError } from "@/lib/errors/db-error";
 
@@ -50,6 +50,28 @@ export function makeContactsRepo(db: AppDatabase) {
           runId: data.runId,
           businessId: data.businessId,
         });
+      }
+    },
+
+    async deleteRawNullEmailBySource(params: {
+      runId: string;
+      businessId: string;
+      source: NewContact["source"];
+    }): Promise<void> {
+      try {
+        await db
+          .delete(contacts)
+          .where(
+            and(
+              eq(contacts.runId, params.runId),
+              eq(contacts.businessId, params.businessId),
+              eq(contacts.source, params.source),
+              eq(contacts.kind, "person"),
+              isNull(contacts.email),
+            ),
+          );
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to delete null-email raw contacts", params);
       }
     },
 

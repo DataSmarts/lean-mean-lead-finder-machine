@@ -3,11 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 import type { Business } from "@/lib/db/businesses.repo";
 import type { PersistEnrichment, PersistReuseEnrichment } from "@/lib/db/enrich-write";
 import type { RunBusiness } from "@/lib/db/run-businesses.repo";
+import { PipelineStateError } from "@/lib/errors";
 
 import type { AiEnrichService } from "./ai-enrich";
 import {
   createEnrichService,
-  ENRICH_REUSE_DAYS,
+  DEFAULT_ENRICH_REUSE_DAYS,
   type EnrichBusinessesRepo,
   type EnrichRunBusinessesRepo,
   rollUpStatus,
@@ -139,6 +140,10 @@ describe("rollUpStatus", () => {
     expect(rollUpStatus("failed", "failed")).toBe("failed");
   });
 
+  it("failed when AI fails and Hunter is skipped", () => {
+    expect(rollUpStatus("failed", "skipped")).toBe("failed");
+  });
+
   it("partial when AI fails and Hunter succeeds", () => {
     expect(rollUpStatus("failed", "succeeded")).toBe("partial");
   });
@@ -213,6 +218,31 @@ describe("createEnrichService.enrichBusiness", () => {
     expect(result.enrichStatus).toBe("enriched"); // AI succeeded + Hunter skipped
   });
 
+  it("fails when Hunter is skipped and AI fails", async () => {
+    const persist = makePersist();
+    const service = createEnrichService({
+      runBusinessesRepo: makeRbRepo(),
+      businessesRepo: makeBizRepo(makeBusiness({ websiteDomain: null, websiteUri: null })),
+      aiEnrichService: { enrich: vi.fn().mockRejectedValue(new Error("ai error")) },
+      hunterEnrichService: makeHunterService(),
+      persist,
+      persistReuse: makePersistReuse(),
+    });
+
+    const result = await service.enrichBusiness("rb-1");
+
+    expect(result.enrichStatus).toBe("failed");
+    expect(result.aiStatus).toBe("failed");
+    expect(result.hunterStatus).toBe("skipped");
+    expect(persist).toHaveBeenCalledWith(
+      expect.objectContaining({
+        aiError: "ai error",
+        enrichStatus: "failed",
+        hunterStatus: "skipped",
+      }),
+    );
+  });
+
   it("calls persistReuse when a reusable run_business exists", async () => {
     const reusableRb = makeRunBusiness({
       id: "old-rb",
@@ -260,7 +290,7 @@ describe("createEnrichService.enrichBusiness", () => {
     expect(hunterService.enrich).not.toHaveBeenCalled();
   });
 
-  it("uses findReusable with the correct 30-day window and excludes the current run", async () => {
+  it("uses findReusable with the default reuse window and excludes the current run", async () => {
     const fixedNow = new Date("2026-06-01T00:00:00Z");
     const rbRepo = makeRbRepo();
     const service = createEnrichService({
@@ -275,7 +305,29 @@ describe("createEnrichService.enrichBusiness", () => {
 
     await service.enrichBusiness("rb-1");
 
-    const expectedSince = new Date(fixedNow.getTime() - ENRICH_REUSE_DAYS * 24 * 60 * 60 * 1000);
+    const expectedSince = new Date(
+      fixedNow.getTime() - DEFAULT_ENRICH_REUSE_DAYS * 24 * 60 * 60 * 1000,
+    );
+    expect(rbRepo.findReusable).toHaveBeenCalledWith("biz-1", expectedSince, "run-1");
+  });
+
+  it("uses an injected reuse window", async () => {
+    const fixedNow = new Date("2026-06-01T00:00:00Z");
+    const rbRepo = makeRbRepo();
+    const service = createEnrichService({
+      runBusinessesRepo: rbRepo,
+      businessesRepo: makeBizRepo(),
+      aiEnrichService: makeAiService(),
+      hunterEnrichService: makeHunterService(),
+      persist: makePersist(),
+      persistReuse: makePersistReuse(),
+      reuseWindowDays: 7,
+      now: () => fixedNow,
+    });
+
+    await service.enrichBusiness("rb-1");
+
+    const expectedSince = new Date(fixedNow.getTime() - 7 * 24 * 60 * 60 * 1000);
     expect(rbRepo.findReusable).toHaveBeenCalledWith("biz-1", expectedSince, "run-1");
   });
 
@@ -289,6 +341,22 @@ describe("createEnrichService.enrichBusiness", () => {
       persistReuse: makePersistReuse(),
     });
 
-    await expect(service.enrichBusiness("ghost")).rejects.toThrow(/RunBusiness ghost not found/);
+    await expect(service.enrichBusiness("ghost")).rejects.toBeInstanceOf(PipelineStateError);
+  });
+
+  it("throws a domain error when the business is not found", async () => {
+    const service = createEnrichService({
+      runBusinessesRepo: makeRbRepo(),
+      businessesRepo: { findById: vi.fn().mockResolvedValue(undefined) },
+      aiEnrichService: makeAiService(),
+      hunterEnrichService: makeHunterService(),
+      persist: makePersist(),
+      persistReuse: makePersistReuse(),
+    });
+
+    await expect(service.enrichBusiness("rb-1")).rejects.toMatchObject({
+      code: "PIPELINE_STATE_ERROR",
+      context: { businessId: "biz-1", runBusinessId: "rb-1" },
+    });
   });
 });

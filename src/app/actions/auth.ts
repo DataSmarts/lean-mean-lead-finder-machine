@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { env } from "@/lib/env";
+import { webEnv as env } from "@/lib/env";
 import {
   createSessionToken,
   SESSION_COOKIE_NAME,

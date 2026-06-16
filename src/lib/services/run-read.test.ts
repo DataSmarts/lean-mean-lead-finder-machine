@@ -33,6 +33,7 @@ function makeRun(overrides: Record<string, unknown> = {}) {
     // Sensitive/internal — must NOT appear in the view:
     approvalToken: "secret-token-abc",
     approvalWaitpointId: "waitpoint-xyz",
+    approvalMessageId: 123,
     triggerRunId: "trigger-run-123",
     presetId: null,
     geocodeLat: 29.7604,
@@ -233,6 +234,7 @@ describe("createRunReadService.getDetail", () => {
     const runView = view!.run as unknown as Record<string, unknown>;
     expect(runView["approvalToken"]).toBeUndefined();
     expect(runView["approvalWaitpointId"]).toBeUndefined();
+    expect(runView["approvalMessageId"]).toBeUndefined();
     expect(runView["triggerRunId"]).toBeUndefined();
     expect(runView["presetId"]).toBeUndefined();
     expect(runView["geocodeLat"]).toBeUndefined();

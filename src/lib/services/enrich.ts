@@ -11,13 +11,13 @@ import type {
   SourceStatusValue,
   StatusUpdate,
 } from "@/lib/db/run-businesses.repo";
+import { PipelineStateError } from "@/lib/errors";
 
 import type { AiEnrichService } from "./ai-enrich";
 import type { HunterEnrichService } from "./hunter-enrich";
 import { merge, type MergedPerson, type SourceContact } from "./merge";
 
-// 30-day enrichment reuse window (§7.4). Stored as a constant rather than an env var.
-export const ENRICH_REUSE_DAYS = 30;
+export const DEFAULT_ENRICH_REUSE_DAYS = 30;
 
 // Narrow repo ports (ISP).
 export interface EnrichRunBusinessesRepo {
@@ -41,6 +41,7 @@ export interface EnrichServiceDeps {
   readonly hunterEnrichService: HunterEnrichService;
   readonly persist: PersistEnrichment;
   readonly persistReuse: PersistReuseEnrichment;
+  readonly reuseWindowDays?: number;
   // Injected for testing (defaults to Date.now in production).
   readonly now?: () => Date;
 }
@@ -62,11 +63,13 @@ export function rollUpStatus(
   aiStatus: SourceStatusValue,
   hunterStatus: SourceStatusValue,
 ): EnrichStatusValue {
-  if (aiStatus === "failed" && hunterStatus === "failed") return "failed";
-  if (aiStatus === "succeeded" && (hunterStatus === "succeeded" || hunterStatus === "skipped")) {
-    return "enriched";
-  }
-  // One succeeded, one failed (not skipped) → partial.
+  const statuses = [aiStatus, hunterStatus];
+  const succeeded = statuses.filter((status) => status === "succeeded").length;
+  const failed = statuses.filter((status) => status === "failed").length;
+
+  if (succeeded > 0 && failed === 0) return "enriched";
+  if (succeeded === 0 && failed > 0) return "failed";
+  if (succeeded === 0 && failed === 0) return "skipped";
   return "partial";
 }
 
@@ -160,21 +163,25 @@ export function createEnrichService({
   hunterEnrichService,
   persist,
   persistReuse,
+  reuseWindowDays = DEFAULT_ENRICH_REUSE_DAYS,
   now = () => new Date(),
 }: EnrichServiceDeps): EnrichService {
   return {
     async enrichBusiness(runBusinessId) {
       const runBusiness = await runBusinessesRepo.findById(runBusinessId);
       if (!runBusiness) {
-        throw new Error(`RunBusiness ${runBusinessId} not found`);
+        throw new PipelineStateError(`RunBusiness ${runBusinessId} not found`, {
+          context: { runBusinessId },
+        });
       }
       const business = await businessesRepo.findById(runBusiness.businessId);
       if (!business) {
-        throw new Error(`Business ${runBusiness.businessId} not found`);
+        throw new PipelineStateError(`Business ${runBusiness.businessId} not found`, {
+          context: { businessId: runBusiness.businessId, runBusinessId },
+        });
       }
 
-      // Re-run reuse: if this business was enriched within ENRICH_REUSE_DAYS, copy contacts.
-      const since = new Date(now().getTime() - ENRICH_REUSE_DAYS * 24 * 60 * 60 * 1000);
+      const since = new Date(now().getTime() - reuseWindowDays * 24 * 60 * 60 * 1000);
       const reusable = await runBusinessesRepo.findReusable(
         runBusiness.businessId,
         since,

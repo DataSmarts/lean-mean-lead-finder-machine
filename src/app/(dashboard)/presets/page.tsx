@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { db } from "@/lib/db/client";
 import type { Preset } from "@/lib/db/presets.repo";
-import { makePresetsRepo } from "@/lib/db/presets.repo";
+import { makePresetsReadService } from "@/lib/services/presets-read";
 
 import { PresetForm } from "./preset-form";
 import { PresetRowActions } from "./preset-row-actions";
@@ -34,8 +34,7 @@ export default async function PresetsPage({ searchParams }: PageProps) {
   const mode = typeof sp["new"] === "string" ? "new" : undefined;
   const editId = typeof sp["edit"] === "string" ? sp["edit"] : undefined;
 
-  const presetsRepo = makePresetsRepo(db);
-  const allPresets = await presetsRepo.findAll();
+  const allPresets = await makePresetsReadService(db).list();
 
   const editPreset = getEditPreset(allPresets, editId);
   const showForm = mode === "new" || !!editPreset;

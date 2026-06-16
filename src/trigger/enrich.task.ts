@@ -8,6 +8,7 @@ import { dbDirect } from "@/lib/db/client";
 import { createEnrichWriter } from "@/lib/db/enrich-write";
 import { makeRunBusinessesRepo } from "@/lib/db/run-businesses.repo";
 import { env } from "@/lib/env";
+import { captureTriggerFailure } from "@/lib/observability/trigger";
 import { createAiEnrichService } from "@/lib/services/ai-enrich";
 import { createEnrichService } from "@/lib/services/enrich";
 import { createHunterEnrichService } from "@/lib/services/hunter-enrich";
@@ -32,10 +33,24 @@ export function chunk<T>(arr: T[], size: number): T[][] {
 export const enrichBusinessTask = task({
   id: "enrich.business",
   retry: { maxAttempts: 3, factor: 2, minTimeoutInMs: 1000, maxTimeoutInMs: 30_000 },
+  onFailure: ({ payload, error }) =>
+    captureTriggerFailure({
+      taskId: "enrich.business",
+      payload,
+      error,
+    }),
   run: async (payload: { runBusinessId: string }) => {
     const http = createHttpClient();
-    const hunterClient = createHunterClient({ http, apiKey: env.HUNTER_API_KEY, limit: env.HUNTER_LIMIT });
-    const openRouterClient = createOpenRouterClient({ http, apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_MODEL });
+    const hunterClient = createHunterClient({
+      http,
+      apiKey: env.HUNTER_API_KEY,
+      limit: env.HUNTER_LIMIT,
+    });
+    const openRouterClient = createOpenRouterClient({
+      http,
+      apiKey: env.OPENROUTER_API_KEY,
+      model: env.OPENROUTER_MODEL,
+    });
     const service = createEnrichService({
       runBusinessesRepo: makeRunBusinessesRepo(dbDirect),
       businessesRepo: makeBusinessesRepo(dbDirect),
@@ -43,6 +58,7 @@ export const enrichBusinessTask = task({
       hunterEnrichService: createHunterEnrichService({ hunterClient }),
       persist,
       persistReuse,
+      reuseWindowDays: env.ENRICH_REUSE_DAYS,
     });
     return service.enrichBusiness(payload.runBusinessId);
   },
@@ -52,6 +68,13 @@ export const enrichBusinessTask = task({
 // Processes sequentially (no Promise.all over batches) to apply natural backpressure.
 export const enrichFanOutTask = task({
   id: "enrich.fanOut",
+  onFailure: ({ payload, error }) =>
+    captureTriggerFailure({
+      taskId: "enrich.fanOut",
+      payload,
+      error,
+      runId: payload.runId,
+    }),
   run: async (payload: { runId: string }) => {
     const runBusinessesRepo = makeRunBusinessesRepo(dbDirect);
     const all = await runBusinessesRepo.findByRun(payload.runId);

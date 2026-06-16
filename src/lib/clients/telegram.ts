@@ -68,14 +68,28 @@ export function createTelegramClient({ http, botToken }: TelegramClientDeps): Te
       },
       { context: { method } },
     );
-    const parsed = telegramResponseSchema.parse(raw);
+    const parsedResult = telegramResponseSchema.safeParse(raw);
+    if (!parsedResult.success) {
+      throw new TelegramApiError(`Telegram ${method} returned an invalid response`, {
+        context: { method },
+        cause: parsedResult.error,
+      });
+    }
+    const parsed = parsedResult.data;
     if (!parsed.ok) {
       throw new TelegramApiError(
         `Telegram ${method} failed: ${parsed.description ?? "unknown error"}`,
         { context: { method, errorCode: parsed.error_code } },
       );
     }
-    return resultSchema.parse(parsed.result);
+    const result = resultSchema.safeParse(parsed.result);
+    if (!result.success) {
+      throw new TelegramApiError(`Telegram ${method} result failed validation`, {
+        context: { method },
+        cause: result.error,
+      });
+    }
+    return result.data;
   }
 
   return {

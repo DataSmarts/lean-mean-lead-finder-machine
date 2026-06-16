@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { env } from "@/lib/env";
+import { webEnv as env } from "@/lib/env";
 import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/services/auth";
 
 const { cookieStore, redirectMock } = vi.hoisted(() => ({

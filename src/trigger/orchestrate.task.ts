@@ -5,6 +5,8 @@ import { createTelegramClient } from "@/lib/clients/telegram";
 import { dbDirect } from "@/lib/db/client";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
 import { env } from "@/lib/env";
+import { PipelineStateError } from "@/lib/errors";
+import { captureTriggerFailure } from "@/lib/observability/trigger";
 import { type ApprovalDecisionPayload, buildApprovalPrompt } from "@/lib/services/approval";
 
 import { discoverTask } from "./discover.task";
@@ -15,6 +17,13 @@ import { finalizeRunTask } from "./finalize.task";
 // APPEND-ONLY: downstream slices add their stage after the approval gate; never reorder or fork.
 export const orchestrateTask = task({
   id: "leadRun.orchestrate",
+  onFailure: ({ payload, error }) =>
+    captureTriggerFailure({
+      taskId: "leadRun.orchestrate",
+      payload,
+      error,
+      runId: payload.runId,
+    }),
   run: async (payload: { runId: string }) => {
     const http = createHttpClient();
     const telegram = createTelegramClient({ http, botToken: env.TELEGRAM_BOT_TOKEN });
@@ -25,7 +34,11 @@ export const orchestrateTask = task({
 
     // --- Approval gate (DAT-41) ---
     const run = await runsRepo.findById(payload.runId);
-    if (!run) throw new Error(`Run ${payload.runId} not found after discover`);
+    if (!run) {
+      throw new PipelineStateError(`Run ${payload.runId} not found after discover`, {
+        context: { runId: payload.runId },
+      });
+    }
 
     // idempotencyKey ties the token to this specific run so a task retry reuses the same token.
     const token = await wait.createToken({
@@ -35,12 +48,20 @@ export const orchestrateTask = task({
       tags: [`run:${payload.runId}`],
     });
 
-    await runsRepo.updateStatus(payload.runId, "awaiting_approval", {
+    const awaitingRun = await runsRepo.updateStatus(payload.runId, "awaiting_approval", {
       approvalWaitpointId: token.id,
     });
 
-    const { text, replyMarkup } = buildApprovalPrompt({ run, appBaseUrl: env.APP_BASE_URL });
-    await telegram.sendMessage({ chatId: env.TELEGRAM_CHAT_ID, text, replyMarkup });
+    const promptRun = awaitingRun ?? run;
+    if (shouldSendApprovalPrompt(promptRun)) {
+      const { text, replyMarkup } = buildApprovalPrompt({ run, appBaseUrl: env.APP_BASE_URL });
+      const message = await telegram.sendMessage({
+        chatId: env.TELEGRAM_CHAT_ID,
+        text,
+        replyMarkup,
+      });
+      await runsRepo.recordApprovalMessage(payload.runId, message.messageId);
+    }
 
     const result = await wait.forToken<ApprovalDecisionPayload>(token.id);
 
@@ -72,4 +93,8 @@ export function mapWaitpointResult(result: {
   if (!result.ok) return "rejected";
   if (result.output?.decision === "rejected") return "rejected";
   return "approved";
+}
+
+export function shouldSendApprovalPrompt(run: { approvalMessageId: number | null }): boolean {
+  return run.approvalMessageId === null;
 }

@@ -81,6 +81,7 @@ function makeLeadRow(overrides: {
     rejectedAt: null,
     triggerRunId: null,
     approvalWaitpointId: null,
+    approvalMessageId: null,
     error: null,
     createdAt: new Date("2025-01-10T00:00:00Z"),
     updatedAt: new Date("2025-01-10T00:00:00Z"),

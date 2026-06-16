@@ -29,6 +29,7 @@ function makeRun(overrides: Partial<Run> = {}): Run {
     contactsFound: 0,
     approvalToken: "tok",
     approvalWaitpointId: null,
+    approvalMessageId: null,
     approvedAt: null,
     approvedBy: null,
     rejectedAt: null,
