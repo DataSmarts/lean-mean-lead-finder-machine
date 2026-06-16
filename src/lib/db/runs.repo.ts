@@ -53,7 +53,15 @@ export function makeRunsRepo(db: AppDatabase) {
       id: string,
       status: RunStatusValue,
       extra: Partial<
-        Pick<Run, "startedAt" | "finishedAt" | "error" | "triggerRunId" | "approvalWaitpointId">
+        Pick<
+          Run,
+          | "startedAt"
+          | "finishedAt"
+          | "error"
+          | "triggerRunId"
+          | "approvalWaitpointId"
+          | "approvalMessageId"
+        >
       > = {},
     ): Promise<Run | undefined> {
       try {
@@ -147,6 +155,19 @@ export function makeRunsRepo(db: AppDatabase) {
         return row;
       } catch (cause) {
         throw wrapDbError(cause, "Failed to record run rejection", { id });
+      }
+    },
+
+    async recordApprovalMessage(id: string, messageId: number): Promise<Run | undefined> {
+      try {
+        const [row] = await db
+          .update(runs)
+          .set(withUpdatedAt({ approvalMessageId: messageId }))
+          .where(and(eq(runs.id, id), isNull(runs.approvalMessageId)))
+          .returning();
+        return row;
+      } catch (cause) {
+        throw wrapDbError(cause, "Failed to record approval message", { id });
       }
     },
 

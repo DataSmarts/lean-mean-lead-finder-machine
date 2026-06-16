@@ -38,7 +38,14 @@ export function createGeocodingClient({ http, apiKey }: GeocodingClientDeps): Ge
     async geocode(address: string): Promise<GeocodeResult> {
       const url = `${GEOCODE_URL}?address=${encodeURIComponent(address)}&key=${encodeURIComponent(apiKey)}`;
       const body = await http.request<unknown>(url, { method: "GET" }, { context: { address } });
-      const parsed = geocodeResponseSchema.parse(body);
+      const parsedResult = geocodeResponseSchema.safeParse(body);
+      if (!parsedResult.success) {
+        throw new HttpError("Geocoding response failed validation", {
+          context: { address },
+          cause: parsedResult.error,
+        });
+      }
+      const parsed = parsedResult.data;
 
       switch (parsed.status) {
         case "OK": {

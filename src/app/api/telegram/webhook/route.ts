@@ -6,7 +6,7 @@ import { createHttpClient } from "@/lib/clients/http";
 import { createTelegramClient } from "@/lib/clients/telegram";
 import { db } from "@/lib/db/client";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
-import { env } from "@/lib/env";
+import { env, webEnv } from "@/lib/env";
 import { createApprovalService } from "@/lib/services/approval";
 import { parseCallbackData, telegramUpdateSchema } from "@/lib/validation/telegram";
 
@@ -19,7 +19,7 @@ const http = createHttpClient();
 // See src/proxy.ts PUBLIC_API_PATHS.
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const secret = request.headers.get("x-telegram-bot-api-secret-token");
-  if (secret !== env.TELEGRAM_WEBHOOK_SECRET) {
+  if (secret !== webEnv.TELEGRAM_WEBHOOK_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

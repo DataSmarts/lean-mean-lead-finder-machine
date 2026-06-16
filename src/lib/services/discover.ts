@@ -95,6 +95,7 @@ export function createDiscoverService(deps: DiscoverServiceDeps): DiscoverServic
         }
         pageIndex = highest.pageIndex + 1;
         requestToken = highest.pageToken;
+        await wait(WAIT_SECONDS_BETWEEN_PAGES);
       }
 
       let businessesFound = run.businessesFound;

@@ -135,6 +135,17 @@ describe("createOpenRouterClient.researchLead", () => {
     expect(mockRequest).toHaveBeenCalledTimes(3);
   });
 
+  it("wraps invalid completion envelopes in AiOutputParseError", async () => {
+    const mockRequest = vi.fn().mockResolvedValue({ choices: [] });
+    const client = createOpenRouterClient({
+      http: makeHttp({ request: mockRequest }),
+      apiKey: "key",
+      model: "m",
+    });
+
+    await expect(client.researchLead(params)).rejects.toBeInstanceOf(AiOutputParseError);
+  });
+
   it("recovers if the second call returns valid JSON", async () => {
     const mockRequest = vi
       .fn()

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { env } from "@/lib/env";
+import { webEnv as env } from "@/lib/env";
 import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/services/auth";
 
 // Telegram's servers reach this without a session; it is secured separately by

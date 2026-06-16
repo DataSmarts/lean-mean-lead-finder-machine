@@ -64,4 +64,11 @@ describe("createGeocodingClient.geocode", () => {
 
     await expect(client.geocode("anywhere")).rejects.toBeInstanceOf(GeocodeNotFoundError);
   });
+
+  it("wraps invalid provider payloads in HttpError", async () => {
+    const { http } = fakeHttp({ status: "OK", results: [{ geometry: {} }] });
+    const client = createGeocodingClient({ http, apiKey: "test-key" });
+
+    await expect(client.geocode("anywhere")).rejects.toBeInstanceOf(HttpError);
+  });
 });

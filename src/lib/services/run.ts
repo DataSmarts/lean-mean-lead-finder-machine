@@ -27,38 +27,77 @@ export interface PresetSnapshot {
 export interface RunService {
   create(input: CreateRunInput): Promise<Run>;
   createFromPreset(preset: PresetSnapshot): Promise<Run>;
+  createAndTrigger(input: CreateRunInput): Promise<Run>;
+  createFromPresetAndTrigger(preset: PresetSnapshot): Promise<Run>;
 }
 
-export function createRunService(deps: { db: AppDatabase }): RunService {
+export interface RunTrigger {
+  trigger(runId: string): Promise<{ triggerRunId: string | null }>;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+export function createRunService(deps: { db: AppDatabase; trigger?: RunTrigger }): RunService {
   const runsRepo = makeRunsRepo(deps.db);
+
+  async function createRun(input: CreateRunInput): Promise<Run> {
+    return runsRepo.create({
+      triggerSource: input.triggerSource,
+      status: "queued",
+      neighborhood: input.neighborhood ?? null,
+      city: input.city,
+      country: input.country,
+      niche: input.niche,
+      maxResults: input.maxResults,
+      presetId: input.presetId ?? null,
+      approvalToken: crypto.randomUUID(),
+    });
+  }
+
+  async function triggerRun(run: Run): Promise<Run> {
+    if (!deps.trigger) return run;
+
+    try {
+      const { triggerRunId } = await deps.trigger.trigger(run.id);
+      return (await runsRepo.updateStatus(run.id, run.status, { triggerRunId })) ?? run;
+    } catch (error) {
+      await runsRepo.updateStatus(run.id, "failed", {
+        error: errorMessage(error),
+        finishedAt: new Date(),
+      });
+      throw error;
+    }
+  }
+
+  function createRunFromPreset(preset: PresetSnapshot): Promise<Run> {
+    return createRun({
+      triggerSource: "schedule",
+      neighborhood: preset.neighborhood,
+      city: preset.city,
+      country: preset.country,
+      niche: preset.niche,
+      maxResults: preset.maxResults,
+      presetId: preset.id,
+    });
+  }
+
   return {
     async create(input: CreateRunInput): Promise<Run> {
-      return runsRepo.create({
-        triggerSource: input.triggerSource,
-        status: "queued",
-        neighborhood: input.neighborhood ?? null,
-        city: input.city,
-        country: input.country,
-        niche: input.niche,
-        maxResults: input.maxResults,
-        presetId: input.presetId ?? null,
-        // Unguessable token the Approval slice uses to correlate the Telegram/webhook callback.
-        approvalToken: crypto.randomUUID(),
-      });
+      return createRun(input);
     },
 
     async createFromPreset(preset: PresetSnapshot): Promise<Run> {
-      return runsRepo.create({
-        triggerSource: "schedule",
-        status: "queued",
-        neighborhood: preset.neighborhood,
-        city: preset.city,
-        country: preset.country,
-        niche: preset.niche,
-        maxResults: preset.maxResults,
-        presetId: preset.id,
-        approvalToken: crypto.randomUUID(),
-      });
+      return createRunFromPreset(preset);
+    },
+
+    async createAndTrigger(input: CreateRunInput): Promise<Run> {
+      return triggerRun(await createRun(input));
+    },
+
+    async createFromPresetAndTrigger(preset: PresetSnapshot): Promise<Run> {
+      return triggerRun(await createRunFromPreset(preset));
     },
   };
 }

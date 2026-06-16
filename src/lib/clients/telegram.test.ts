@@ -71,6 +71,24 @@ describe("createTelegramClient.sendMessage", () => {
     const apiErr = err as TelegramApiError;
     expect(apiErr.context).toMatchObject({ method: "sendMessage", errorCode: 400 });
   });
+
+  it("wraps invalid Telegram envelopes in TelegramApiError", async () => {
+    const { http } = fakeHttp({ result: { message_id: 1 } });
+    const client = createTelegramClient({ http, botToken: BOT_TOKEN });
+
+    await expect(client.sendMessage({ chatId: "1", text: "Hi" })).rejects.toBeInstanceOf(
+      TelegramApiError,
+    );
+  });
+
+  it("wraps invalid Telegram results in TelegramApiError", async () => {
+    const { http } = fakeHttp({ ok: true, result: {} });
+    const client = createTelegramClient({ http, botToken: BOT_TOKEN });
+
+    await expect(client.sendMessage({ chatId: "1", text: "Hi" })).rejects.toBeInstanceOf(
+      TelegramApiError,
+    );
+  });
 });
 
 describe("createTelegramClient.editMessageText", () => {

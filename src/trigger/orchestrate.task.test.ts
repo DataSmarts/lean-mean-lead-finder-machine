@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mapWaitpointResult } from "./orchestrate.task";
+import { mapWaitpointResult, shouldSendApprovalPrompt } from "./orchestrate.task";
 
 describe("mapWaitpointResult", () => {
   it("returns rejected when ok is false (timeout)", () => {
@@ -17,5 +17,15 @@ describe("mapWaitpointResult", () => {
     expect(
       mapWaitpointResult({ ok: true, output: { decision: "approved", by: "telegram:alice" } }),
     ).toBe("approved");
+  });
+});
+
+describe("shouldSendApprovalPrompt", () => {
+  it("sends when no Telegram approval message has been recorded", () => {
+    expect(shouldSendApprovalPrompt({ approvalMessageId: null })).toBe(true);
+  });
+
+  it("skips when a Telegram approval message was already recorded", () => {
+    expect(shouldSendApprovalPrompt({ approvalMessageId: 123 })).toBe(false);
   });
 });

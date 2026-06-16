@@ -10,12 +10,10 @@ const { redirectMock, revalidatePathMock } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
-vi.mock("@trigger.dev/sdk", () => ({ tasks: { trigger: vi.fn().mockResolvedValue(undefined) } }));
 vi.mock("@/lib/services/run", () => ({ createRunService: vi.fn() }));
+vi.mock("@/lib/clients/trigger", () => ({ createLeadRunTrigger: vi.fn(() => ({})) }));
 vi.mock("@/lib/db/client", () => ({ db: {} }));
 vi.mock("@/lib/db/presets.repo", () => ({ makePresetsRepo: vi.fn() }));
-
-import { tasks } from "@trigger.dev/sdk";
 
 import { makePresetsRepo } from "@/lib/db/presets.repo";
 
@@ -37,11 +35,11 @@ const validFields = {
 };
 
 function setupService(runId = "run-1") {
-  const create = vi.fn().mockResolvedValue({ id: runId, status: "queued" });
-  vi.mocked(createRunService).mockReturnValue({ create } as unknown as ReturnType<
+  const createAndTrigger = vi.fn().mockResolvedValue({ id: runId, status: "queued" });
+  vi.mocked(createRunService).mockReturnValue({ createAndTrigger } as unknown as ReturnType<
     typeof createRunService
   >);
-  return { create };
+  return { createAndTrigger };
 }
 
 function setupPresets(presetId = "preset-1") {
@@ -55,52 +53,50 @@ function setupPresets(presetId = "preset-1") {
 beforeEach(() => {
   redirectMock.mockClear();
   revalidatePathMock.mockClear();
-  vi.mocked(tasks.trigger).mockClear();
 });
 
 describe("createRun action", () => {
   it("returns an error and does not create or trigger when city is missing", async () => {
-    const { create } = setupService();
+    const { createAndTrigger } = setupService();
     const result = await createRun(
       {},
       formWith({ country: "United States", niche: "x", maxResults: "50" }),
     );
 
     expect(result.error).toBeDefined();
-    expect(create).not.toHaveBeenCalled();
-    expect(tasks.trigger).not.toHaveBeenCalled();
+    expect(createAndTrigger).not.toHaveBeenCalled();
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
   it("returns an error when niche is missing", async () => {
-    const { create } = setupService();
+    const { createAndTrigger } = setupService();
     const result = await createRun(
       {},
       formWith({ city: "Houston", country: "US", maxResults: "50" }),
     );
 
     expect(result.error).toBeDefined();
-    expect(create).not.toHaveBeenCalled();
+    expect(createAndTrigger).not.toHaveBeenCalled();
   });
 
   it("creates a run with triggerSource:'dashboard'", async () => {
-    const { create } = setupService();
+    const { createAndTrigger } = setupService();
     setupPresets();
 
     await createRun({}, formWith(validFields));
 
-    expect(create).toHaveBeenCalledWith(
+    expect(createAndTrigger).toHaveBeenCalledWith(
       expect.objectContaining<Partial<CreateRunInput>>({ triggerSource: "dashboard" }),
     );
   });
 
-  it("triggers leadRun.orchestrate with the new run id", async () => {
+  it("launches orchestration through the run service", async () => {
     setupService("run-xyz");
     setupPresets();
 
     await createRun({}, formWith(validFields));
 
-    expect(tasks.trigger).toHaveBeenCalledWith("leadRun.orchestrate", { runId: "run-xyz" });
+    expect(createRunService).toHaveBeenCalledWith(expect.objectContaining({ trigger: {} }));
   });
 
   it("calls revalidatePath('/runs') after creating", async () => {
@@ -122,55 +118,55 @@ describe("createRun action", () => {
   });
 
   it("coerces maxResults from the FormData string to a number", async () => {
-    const { create } = setupService();
+    const { createAndTrigger } = setupService();
     setupPresets();
 
     await createRun({}, formWith({ ...validFields, maxResults: "75" }));
 
-    expect(create).toHaveBeenCalledWith(
+    expect(createAndTrigger).toHaveBeenCalledWith(
       expect.objectContaining<Partial<CreateRunInput>>({ maxResults: 75 }),
     );
   });
 
   it("defaults maxResults to 120 when omitted", async () => {
-    const { create } = setupService();
+    const { createAndTrigger } = setupService();
     setupPresets();
     const { maxResults: _omit, ...fieldsWithoutMax } = validFields;
 
     await createRun({}, formWith(fieldsWithoutMax));
 
-    expect(create).toHaveBeenCalledWith(
+    expect(createAndTrigger).toHaveBeenCalledWith(
       expect.objectContaining<Partial<CreateRunInput>>({ maxResults: 120 }),
     );
   });
 
   it("succeeds when neighborhood is an empty string (treats it as omitted)", async () => {
-    const { create } = setupService();
+    const { createAndTrigger } = setupService();
     setupPresets();
 
     // redirect() is mocked (no throw), so createRun returns undefined on success.
     await createRun({}, formWith({ ...validFields, neighborhood: "" }));
 
-    expect(create).toHaveBeenCalledWith(
+    expect(createAndTrigger).toHaveBeenCalledWith(
       expect.objectContaining<Partial<CreateRunInput>>({ neighborhood: undefined }),
     );
     expect(redirectMock).toHaveBeenCalled();
   });
 
   it("does not call upsertByName when saveAsPreset is not set", async () => {
-    const { create } = setupService();
+    const { createAndTrigger } = setupService();
     const { upsertByName } = setupPresets();
 
     await createRun({}, formWith(validFields));
 
     expect(upsertByName).not.toHaveBeenCalled();
-    expect(create).toHaveBeenCalledWith(
+    expect(createAndTrigger).toHaveBeenCalledWith(
       expect.objectContaining<Partial<CreateRunInput>>({ presetId: null }),
     );
   });
 
   it("upserts a preset and forwards presetId when saveAsPreset is true", async () => {
-    const { create } = setupService();
+    const { createAndTrigger } = setupService();
     const { upsertByName } = setupPresets("preset-abc");
 
     await createRun(
@@ -179,17 +175,17 @@ describe("createRun action", () => {
     );
 
     expect(upsertByName).toHaveBeenCalledWith(expect.objectContaining({ name: "My Preset" }));
-    expect(create).toHaveBeenCalledWith(
+    expect(createAndTrigger).toHaveBeenCalledWith(
       expect.objectContaining<Partial<CreateRunInput>>({ presetId: "preset-abc" }),
     );
   });
 
   it("returns an error when saveAsPreset is true but presetName is missing", async () => {
-    const { create } = setupService();
+    const { createAndTrigger } = setupService();
 
     const result = await createRun({}, formWith({ ...validFields, saveAsPreset: "true" }));
 
     expect(result.error).toBeDefined();
-    expect(create).not.toHaveBeenCalled();
+    expect(createAndTrigger).not.toHaveBeenCalled();
   });
 });

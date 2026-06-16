@@ -156,4 +156,11 @@ describe("createHunterClient.domainSearch", () => {
 
     await expect(client.domainSearch("acme.com")).rejects.toBe(serverErr);
   });
+
+  it("wraps invalid provider payloads in HttpError", async () => {
+    const http = makeHttp({ request: vi.fn().mockResolvedValue({ data: { emails: [{}] } }) });
+    const client = createHunterClient({ http, apiKey: "key" });
+
+    await expect(client.domainSearch("acme.com")).rejects.toBeInstanceOf(HttpError);
+  });
 });

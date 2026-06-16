@@ -75,6 +75,7 @@ function makeLeadRow(overrides: Partial<LeadRow["contact"]> = {}): LeadRow {
       rejectedAt: null,
       triggerRunId: null,
       approvalWaitpointId: null,
+      approvalMessageId: null,
       error: null,
       createdAt: new Date(),
       updatedAt: new Date(),

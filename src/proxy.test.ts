@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { env } from "@/lib/env";
+import { webEnv as env } from "@/lib/env";
 import { createSessionToken, SESSION_COOKIE_NAME } from "@/lib/services/auth";
 
 import { proxy } from "./proxy";

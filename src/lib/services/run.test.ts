@@ -11,10 +11,24 @@ const fakeDb = {} as AppDatabase;
 
 function setup() {
   const create = vi.fn(async (data: Record<string, unknown>) => ({ id: "run-1", ...data }));
+  const updateStatus = vi.fn(
+    async (id: string, status: string, extra: Record<string, unknown>) => ({
+      id,
+      status,
+      ...extra,
+    }),
+  );
   vi.mocked(makeRunsRepo).mockReturnValue({
     create,
+    updateStatus,
   } as unknown as ReturnType<typeof makeRunsRepo>);
-  return { create, service: createRunService({ db: fakeDb }) };
+  return { create, updateStatus, service: createRunService({ db: fakeDb }) };
+}
+
+function setupWithTrigger() {
+  const trigger = { trigger: vi.fn().mockResolvedValue({ triggerRunId: "trig-1" }) };
+  const base = setup();
+  return { ...base, trigger, service: createRunService({ db: fakeDb, trigger }) };
 }
 
 const validInput = {
@@ -138,5 +152,43 @@ describe("createRunService.create", () => {
     const run = await service.create(validInput);
 
     expect(run).toMatchObject({ id: "run-1" });
+  });
+});
+
+describe("createRunService launch methods", () => {
+  it("persists the Trigger.dev run id after createAndTrigger enqueues orchestration", async () => {
+    const { service, trigger, updateStatus } = setupWithTrigger();
+
+    const run = await service.createAndTrigger(validInput);
+
+    expect(trigger.trigger).toHaveBeenCalledWith("run-1");
+    expect(updateStatus).toHaveBeenCalledWith("run-1", "queued", { triggerRunId: "trig-1" });
+    expect(run).toMatchObject({ triggerRunId: "trig-1" });
+  });
+
+  it("marks the run failed when createAndTrigger cannot enqueue orchestration", async () => {
+    const trigger = { trigger: vi.fn().mockRejectedValue(new Error("Trigger down")) };
+    const { updateStatus } = setup();
+    const service = createRunService({ db: fakeDb, trigger });
+
+    await expect(service.createAndTrigger(validInput)).rejects.toThrow("Trigger down");
+
+    expect(updateStatus).toHaveBeenCalledWith(
+      "run-1",
+      "failed",
+      expect.objectContaining({
+        error: "Trigger down",
+        finishedAt: expect.any(Date),
+      }),
+    );
+  });
+
+  it("launches preset-backed runs through the same trigger path", async () => {
+    const { service, trigger, updateStatus } = setupWithTrigger();
+
+    await service.createFromPresetAndTrigger(validPreset);
+
+    expect(trigger.trigger).toHaveBeenCalledWith("run-1");
+    expect(updateStatus).toHaveBeenCalledWith("run-1", "queued", { triggerRunId: "trig-1" });
   });
 });

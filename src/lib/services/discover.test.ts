@@ -31,6 +31,7 @@ function baseRun(overrides: Partial<Run> = {}): Run {
     rejectedAt: null,
     triggerRunId: null,
     approvalWaitpointId: null,
+    approvalMessageId: null,
     error: null,
     createdAt: new Date(0),
     updatedAt: new Date(0),
@@ -164,7 +165,7 @@ describe("createDiscoverService.discover", () => {
     expect(ctx.wait).not.toHaveBeenCalled();
   });
 
-  it("resumes from the page after the highest persisted one, with no re-fetch or double-count", async () => {
+  it("waits before resuming from a persisted nextPageToken", async () => {
     const ctx = setup();
     ctx.findById.mockResolvedValue(baseRun({ geocodeLat: 1, geocodeLng: 2, businessesFound: 40 }));
     ctx.findByRun.mockResolvedValue([discoveryPage(0, "t1"), discoveryPage(1, "t2")]);
@@ -176,6 +177,7 @@ describe("createDiscoverService.discover", () => {
     const result = await ctx.service.discover("run-1");
 
     expect(ctx.searchText).toHaveBeenCalledTimes(1);
+    expect(ctx.wait).toHaveBeenCalledWith(2);
     expect(ctx.searchText.mock.calls[0][0].pageToken).toBe("t2");
     expect(ctx.persistPage).toHaveBeenCalledTimes(1);
     expect(ctx.persistPage.mock.calls[0][0].pageIndex).toBe(2);

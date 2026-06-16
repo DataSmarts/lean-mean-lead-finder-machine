@@ -58,6 +58,32 @@ export type PersistReuseEnrichment = (
 
 const TERMINAL_STATUSES: EnrichStatusValue[] = ["enriched", "partial", "failed"];
 
+function rawNullEmailSources(rawContacts: readonly RawContactWithIndex[]): NewContact["source"][] {
+  return Array.from(
+    new Set(
+      rawContacts
+        .filter(({ contact }) => contact.email === null)
+        .map(({ contact }) => contact.source),
+    ),
+  );
+}
+
+async function deleteMergedContacts(
+  tx: Parameters<Parameters<PostgresJsDatabase<typeof schema>["transaction"]>[0]>[0],
+  runId: string,
+  businessId: string,
+): Promise<void> {
+  await tx
+    .delete(contacts)
+    .where(
+      and(
+        eq(contacts.runId, runId),
+        eq(contacts.businessId, businessId),
+        eq(contacts.kind, "merged"),
+      ),
+    );
+}
+
 export function createEnrichWriter(db: PostgresJsDatabase<typeof schema>): {
   persist: PersistEnrichment;
   persistReuse: PersistReuseEnrichment;
@@ -80,6 +106,10 @@ export function createEnrichWriter(db: PostgresJsDatabase<typeof schema>): {
       const runBusinessesRepo = makeRunBusinessesRepo(tx);
       const runsRepo = makeRunsRepo(tx);
 
+      for (const source of rawNullEmailSources(rawContacts)) {
+        await contactsRepo.deleteRawNullEmailBySource({ runId, businessId, source });
+      }
+
       // 1. Upsert raw person contacts; track which merged-person index each belongs to.
       const upsertedByMergedIndex = new Map<number, string[]>();
       for (const { contact, mergedPersonIndex } of rawContacts) {
@@ -90,15 +120,7 @@ export function createEnrichWriter(db: PostgresJsDatabase<typeof schema>): {
       }
 
       // 2. Delete existing merged rows for this (run, business) — idempotent regen on retry.
-      await tx
-        .delete(contacts)
-        .where(
-          and(
-            eq(contacts.runId, runId),
-            eq(contacts.businessId, businessId),
-            eq(contacts.kind, "merged"),
-          ),
-        );
+      await deleteMergedContacts(tx, runId, businessId);
 
       // 3. Insert fresh merged rows.
       const mergedRowIds: string[] = [];
@@ -161,6 +183,14 @@ export function createEnrichWriter(db: PostgresJsDatabase<typeof schema>): {
       const priorContacts = await contactsRepo.findByRunAndBusiness(sourceRunId, businessId);
       const priorMerged = priorContacts.filter((c) => c.kind === "merged");
       const priorRaw = priorContacts.filter((c) => c.kind === "person");
+
+      await deleteMergedContacts(tx, runId, businessId);
+      const nullEmailSources = new Set(
+        priorRaw.filter((contact) => contact.email === null).map((contact) => contact.source),
+      );
+      for (const source of nullEmailSources) {
+        await contactsRepo.deleteRawNullEmailBySource({ runId, businessId, source });
+      }
 
       // Insert merged contacts first (raw contacts reference them via mergedIntoId).
       const oldToNewMergedId = new Map<string, string>();

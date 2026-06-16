@@ -85,6 +85,7 @@ function makeRow(): LeadRow {
       rejectedAt: null,
       triggerRunId: null,
       approvalWaitpointId: null,
+      approvalMessageId: null,
       error: null,
       createdAt: new Date(),
       updatedAt: new Date(),

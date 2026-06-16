@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 import { db } from "@/lib/db/client";
-import { makeRunsRepo } from "@/lib/db/runs.repo";
 import type { RunStatusValue } from "@/lib/runs/status";
 import { RUN_STATUS_BADGE_TONE } from "@/lib/runs/status";
+import { makeRunsListService } from "@/lib/services/runs-list";
 import { runsListQuerySchema } from "@/lib/validation/runs";
 
 import styles from "./runs.module.css";
@@ -61,7 +61,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
   });
 
   const PAGE_SIZE = 20;
-  const result = await makeRunsRepo(db).list({
+  const result = await makeRunsListService(db).list({
     page: query.page,
     pageSize: PAGE_SIZE,
     status: query.status,
@@ -163,9 +163,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
                       </span>
                     </td>
                     <td>
-                      <span className={styles.timestamp}>
-                        {formatDate(run.createdAt.toISOString())}
-                      </span>
+                      <span className={styles.timestamp}>{formatDate(run.createdAt)}</span>
                     </td>
                   </tr>
                 );

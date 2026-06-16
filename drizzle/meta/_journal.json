@@ -29,6 +29,13 @@
       "when": 1780700367107,
       "tag": "0003_chilly_switch",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781611228566,
+      "tag": "0004_exotic_smasher",
+      "breakpoints": true
     }
   ]
 }

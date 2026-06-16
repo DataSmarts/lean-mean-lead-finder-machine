@@ -132,7 +132,14 @@ export function createHunterClient({
   return {
     async domainSearch(domain: string): Promise<HunterDomainSearchResult> {
       const raw = await domainSearchWithRetry(domain);
-      const parsed = domainSearchResponseSchema.parse(raw);
+      const parsedResult = domainSearchResponseSchema.safeParse(raw);
+      if (!parsedResult.success) {
+        throw new HttpError("Hunter response failed validation", {
+          context: { domain },
+          cause: parsedResult.error,
+        });
+      }
+      const parsed = parsedResult.data;
       return {
         organization: parsed.data.organization ?? null,
         pattern: parsed.data.pattern ?? null,

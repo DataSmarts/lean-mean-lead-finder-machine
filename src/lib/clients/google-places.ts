@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { HttpError } from "@/lib/errors/http-error";
+
 import type { HttpClient } from "./http";
 
 const PLACES_SEARCH_URL = "https://places.googleapis.com/v1/places:searchText";
@@ -106,9 +108,15 @@ export function createPlacesClient({ http, apiKey }: PlacesClientDeps): PlacesCl
         { context: { textQuery } },
       );
 
-      const parsed = searchResponseSchema.parse(response);
+      const parsed = searchResponseSchema.safeParse(response);
+      if (!parsed.success) {
+        throw new HttpError("Google Places response failed validation", {
+          context: { textQuery },
+          cause: parsed.error,
+        });
+      }
       return {
-        places: parsed.places.map((place) => ({
+        places: parsed.data.places.map((place) => ({
           id: place.id,
           name: place.displayName?.text ?? "",
           websiteUri: place.websiteUri,
@@ -120,7 +128,7 @@ export function createPlacesClient({ http, apiKey }: PlacesClientDeps): PlacesCl
           priceLevel: place.priceLevel,
           types: place.types ?? [],
         })),
-        nextPageToken: parsed.nextPageToken,
+        nextPageToken: parsed.data.nextPageToken,
       };
     },
   };
