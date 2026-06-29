@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/config/defaults";
 import { db } from "@/lib/db/client";
 import { EMAIL_VERIFICATION_BADGE_TONE } from "@/lib/leads/source-badge";
 import { makeLeadsReadService } from "@/lib/services/leads-read";
@@ -9,8 +10,6 @@ import type { LeadsListQuery } from "@/lib/validation/leads";
 import { leadsListQuerySchema } from "@/lib/validation/leads";
 
 import styles from "./leads.module.css";
-
-const PAGE_SIZE = 20;
 
 const BADGE_CLASS: Record<string, string> = {
   muted: styles.badgeMuted!,
@@ -67,11 +66,11 @@ export default async function LeadsPage({ searchParams }: PageProps) {
 
   const service = makeLeadsReadService(db);
   const [result, runOptions] = await Promise.all([
-    service.list({ ...query, pageSize: PAGE_SIZE }),
+    service.list({ ...query, pageSize: DEFAULT_LIST_PAGE_SIZE }),
     service.runOptions(),
   ]);
 
-  const totalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(result.total / DEFAULT_LIST_PAGE_SIZE));
   const exportHref = buildExportHref(query);
   const hasActiveFilter =
     query.q ?? query.niche ?? query.city ?? query.source ?? query.verification ?? query.runId;

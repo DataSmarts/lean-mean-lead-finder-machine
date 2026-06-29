@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { DEFAULT_ENRICH_BATCH_SIZE, DEFAULT_ENRICH_REUSE_DAYS } from "@/lib/config/defaults";
+
 // Vars required by Trigger.dev tasks and shared Next.js code.
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -8,7 +10,8 @@ const envSchema = z.object({
   GOOGLE_MAPS_API_KEY: z.string().min(1),
   HUNTER_API_KEY: z.string().min(1),
   HUNTER_LIMIT: z.coerce.number().int().positive().default(5),
-  ENRICH_REUSE_DAYS: z.coerce.number().int().positive().default(30),
+  ENRICH_REUSE_DAYS: z.coerce.number().int().positive().default(DEFAULT_ENRICH_REUSE_DAYS),
+  ENRICH_BATCH_SIZE: z.coerce.number().int().positive().default(DEFAULT_ENRICH_BATCH_SIZE),
   OPENROUTER_API_KEY: z.string().min(1),
   OPENROUTER_MODEL: z.string().min(1).default("google/gemini-3-flash-preview:online"),
   TELEGRAM_BOT_TOKEN: z.string().min(1),

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
+
 import { frequencyToCron, presetFormSchema } from "./presets";
 
 describe("frequencyToCron", () => {
@@ -22,7 +24,7 @@ describe("presetFormSchema", () => {
     if (result.success) {
       expect(result.data.cron).toBeNull();
       expect(result.data.isActive).toBe(false);
-      expect(result.data.maxResults).toBe(120);
+      expect(result.data.maxResults).toBe(DEFAULT_MAX_RESULTS);
     }
   });
 

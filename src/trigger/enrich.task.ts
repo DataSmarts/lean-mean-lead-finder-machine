@@ -13,10 +13,6 @@ import { createAiEnrichService } from "@/lib/services/ai-enrich";
 import { createEnrichService } from "@/lib/services/enrich";
 import { createHunterEnrichService } from "@/lib/services/hunter-enrich";
 
-// Number of enrich.business tasks per batchTriggerAndWait call.
-// Controls fan-out concurrency and provider request volume.
-export const ENRICH_BATCH_SIZE = 25;
-
 const { persist, persistReuse } = createEnrichWriter(dbDirect);
 
 // Chunks an array into sub-arrays of at most `size` elements. Pure helper.
@@ -80,7 +76,7 @@ export const enrichFanOutTask = task({
     const all = await runBusinessesRepo.findByRun(payload.runId);
     const queued = all.filter((rb) => rb.enrichStatus === "queued");
 
-    const batches = chunk(queued, ENRICH_BATCH_SIZE);
+    const batches = chunk(queued, env.ENRICH_BATCH_SIZE);
     let enriched = 0;
     let failed = 0;
 

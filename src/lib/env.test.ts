@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_ENRICH_BATCH_SIZE, DEFAULT_ENRICH_REUSE_DAYS } from "@/lib/config/defaults";
+
 import { parseEnv, parseWebEnv } from "./env";
 
 const validTask = {
@@ -47,12 +49,24 @@ describe("parseEnv (task-safe vars)", () => {
     expect(() => parseEnv(validTask)).not.toThrow();
   });
 
-  it("defaults ENRICH_REUSE_DAYS to 30", () => {
-    expect(parseEnv(validTask).ENRICH_REUSE_DAYS).toBe(30);
+  it("defaults ENRICH_REUSE_DAYS", () => {
+    expect(parseEnv(validTask).ENRICH_REUSE_DAYS).toBe(DEFAULT_ENRICH_REUSE_DAYS);
   });
 
   it("coerces ENRICH_REUSE_DAYS from a string", () => {
     expect(parseEnv({ ...validTask, ENRICH_REUSE_DAYS: "14" }).ENRICH_REUSE_DAYS).toBe(14);
+  });
+
+  it("defaults ENRICH_BATCH_SIZE", () => {
+    expect(parseEnv(validTask).ENRICH_BATCH_SIZE).toBe(DEFAULT_ENRICH_BATCH_SIZE);
+  });
+
+  it("coerces ENRICH_BATCH_SIZE from a string", () => {
+    expect(parseEnv({ ...validTask, ENRICH_BATCH_SIZE: "10" }).ENRICH_BATCH_SIZE).toBe(10);
+  });
+
+  it("throws when ENRICH_BATCH_SIZE is not positive", () => {
+    expect(() => parseEnv({ ...validTask, ENRICH_BATCH_SIZE: "0" })).toThrow("ENRICH_BATCH_SIZE");
   });
 
   it("throws when TELEGRAM_BOT_TOKEN is absent", () => {

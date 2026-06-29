@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
+
 export type CronFrequency = "hourly" | "daily" | "weekly" | "custom";
 
 // Maps a friendly frequency name to a cron expression.
@@ -26,7 +28,7 @@ export const presetFormSchema = z
     city: z.string().min(1, "City is required"),
     country: z.string().min(1, "Country is required"),
     niche: z.string().min(1, "Niche is required"),
-    maxResults: z.coerce.number().int().positive().default(120),
+    maxResults: z.coerce.number().int().positive().default(DEFAULT_MAX_RESULTS),
     isActive: z.boolean().default(false),
     frequency: z.enum(["hourly", "daily", "weekly", "custom"]).optional(),
     customCron: z.string().optional(),

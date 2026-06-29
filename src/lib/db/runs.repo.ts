@@ -1,5 +1,6 @@
 import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/config/defaults";
 import type { RunStatusValue } from "@/lib/domain/enums";
 import { wrapDbError } from "@/lib/errors/db-error";
 
@@ -190,7 +191,11 @@ export function makeRunsRepo(db: AppDatabase) {
 
     // Lists runs ordered by created_at desc (uses runs_status_created_at_idx).
     // Supports optional status filter and offset-based pagination.
-    async list({ page, pageSize = 20, status }: RunsListParams): Promise<RunsListResult> {
+    async list({
+      page,
+      pageSize = DEFAULT_LIST_PAGE_SIZE,
+      status,
+    }: RunsListParams): Promise<RunsListResult> {
       const offset = (page - 1) * pageSize;
       const where = status ? eq(runs.status, status) : undefined;
       try {
