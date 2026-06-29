@@ -1,5 +1,7 @@
 // Pure — no I/O. Implements the §6.3 identity-match and field-precedence merge rules.
 
+import type { EmailVerificationValue } from "@/lib/domain/enums";
+
 export interface SourceContact {
   readonly source: "ai" | "hunter";
   readonly fullName: string | null;
@@ -8,8 +10,7 @@ export interface SourceContact {
   readonly title: string | null;
   readonly email: string | null;
   readonly emailConfidence: number | null;
-  // The emailVerification enum value; null means not supplied by this source.
-  readonly emailVerification: string | null;
+  readonly emailVerification: EmailVerificationValue | null;
   readonly seniority: string | null;
   readonly department: string | null;
   readonly phone: string | null;
@@ -32,7 +33,7 @@ export interface MergedPerson {
   readonly title: string | null;
   readonly email: string | null;
   readonly emailConfidence: number | null;
-  readonly emailVerification: string | null;
+  readonly emailVerification: EmailVerificationValue | null;
   readonly seniority: string | null;
   readonly department: string | null;
   readonly phone: string | null;

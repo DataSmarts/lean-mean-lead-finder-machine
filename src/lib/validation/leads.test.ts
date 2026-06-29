@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { CONTACT_SOURCE_VALUES, EMAIL_VERIFICATION_VALUES } from "@/lib/domain/enums";
+
 import { leadsListQuerySchema, runExportQuerySchema } from "./leads";
 
 describe("leadsListQuerySchema", () => {
@@ -54,8 +56,10 @@ describe("leadsListQuerySchema", () => {
     expect(leadsListQuerySchema.parse({ source: "unknown_source" }).source).toBeUndefined();
   });
 
-  it("accepts ai as a source value", () => {
-    expect(leadsListQuerySchema.parse({ source: "ai" }).source).toBe("ai");
+  it("accepts each valid source value", () => {
+    for (const value of CONTACT_SOURCE_VALUES) {
+      expect(leadsListQuerySchema.parse({ source: value }).source).toBe(value);
+    }
   });
 
   it("returns undefined for an invalid verification value instead of throwing", () => {
@@ -65,16 +69,7 @@ describe("leadsListQuerySchema", () => {
   });
 
   it("accepts each valid verification value", () => {
-    const values = [
-      "valid",
-      "invalid",
-      "accept_all",
-      "webmail",
-      "disposable",
-      "unknown",
-      "unverified",
-    ] as const;
-    for (const v of values) {
+    for (const v of EMAIL_VERIFICATION_VALUES) {
       expect(leadsListQuerySchema.parse({ verification: v }).verification).toBe(v);
     }
   });

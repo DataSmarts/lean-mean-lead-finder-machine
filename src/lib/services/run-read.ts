@@ -6,7 +6,13 @@ import type { RunBusiness } from "@/lib/db/run-businesses.repo";
 import { makeRunBusinessesRepo } from "@/lib/db/run-businesses.repo";
 import type { Run } from "@/lib/db/runs.repo";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
-import type { RunStatusValue } from "@/lib/runs/status";
+import type {
+  BusinessEnrichStatusValue,
+  EmailVerificationValue,
+  RunStatusValue,
+  SourceStatusValue,
+  TriggerSourceValue,
+} from "@/lib/domain/enums";
 
 // --- Narrow repo ports (ISP) --------------------------------------------------
 
@@ -32,7 +38,7 @@ export interface RunReadServiceDeps {
 
 export interface RunView {
   readonly id: string;
-  readonly triggerSource: "dashboard" | "schedule" | "api";
+  readonly triggerSource: TriggerSourceValue;
   readonly status: RunStatusValue;
   readonly neighborhood: string | null;
   readonly city: string;
@@ -72,9 +78,9 @@ export interface RunBusinessView {
   readonly id: string;
   readonly runId: string;
   readonly businessId: string;
-  readonly enrichStatus: string;
-  readonly aiStatus: string;
-  readonly hunterStatus: string;
+  readonly enrichStatus: BusinessEnrichStatusValue;
+  readonly aiStatus: SourceStatusValue;
+  readonly hunterStatus: SourceStatusValue;
   readonly aiError: string | null;
   readonly hunterError: string | null;
   readonly attempts: number;
@@ -90,7 +96,7 @@ export interface MergedContactView {
   readonly title: string | null;
   readonly email: string | null;
   readonly emailConfidence: number | null;
-  readonly emailVerification: string | null;
+  readonly emailVerification: EmailVerificationValue;
   readonly seniority: string | null;
   readonly department: string | null;
   readonly phone: string | null;
@@ -122,7 +128,7 @@ export function toRunView(run: Run): RunView {
   return {
     id: run.id,
     triggerSource: run.triggerSource,
-    status: run.status as RunStatusValue,
+    status: run.status,
     neighborhood: run.neighborhood,
     city: run.city,
     country: run.country,

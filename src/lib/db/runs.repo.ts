@@ -1,17 +1,16 @@
 import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
 
+import type { RunStatusValue } from "@/lib/domain/enums";
 import { wrapDbError } from "@/lib/errors/db-error";
 
 import type { AppDatabase } from "./client";
-import type { runStatus } from "./schema";
 import { runs } from "./schema";
 import { withUpdatedAt } from "./timestamp";
 
 export type Run = typeof runs.$inferSelect;
 
 export type NewRun = Omit<typeof runs.$inferInsert, "id" | "createdAt" | "updatedAt">;
-
-export type RunStatusValue = (typeof runStatus.enumValues)[number];
+export type { RunStatusValue };
 
 type CounterField = "businessesFound" | "businessesEnriched" | "businessesFailed" | "contactsFound";
 

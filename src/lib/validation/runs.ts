@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { RUN_STATUS_VALUES } from "@/lib/domain/enums";
+
 // Boundary validation for starting a run (dashboard form + POST /api/runs share this).
 export const createRunSchema = z.object({
   neighborhood: z.string().min(1).optional(),
@@ -10,18 +12,6 @@ export const createRunSchema = z.object({
 });
 
 export type CreateRunRequest = z.infer<typeof createRunSchema>;
-
-// Valid run statuses for the list filter.
-const RUN_STATUS_VALUES = [
-  "queued",
-  "discovering",
-  "awaiting_approval",
-  "rejected",
-  "enriching",
-  "completed",
-  "failed",
-  "canceled",
-] as const;
 
 // Query params for the runs list page. Unknown status values fall back to undefined
 // (no filter) so a hand-typed ?status=bogus never causes a 500.

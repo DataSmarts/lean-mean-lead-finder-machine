@@ -1,8 +1,9 @@
 import type { AppDatabase } from "@/lib/db/client";
 import type { Run } from "@/lib/db/runs.repo";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
+import type { TriggerSourceValue } from "@/lib/domain/enums";
 
-export type RunTriggerSource = "dashboard" | "schedule" | "api";
+export type RunTriggerSource = TriggerSourceValue;
 
 export interface CreateRunInput {
   readonly triggerSource: RunTriggerSource;

@@ -1,16 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { runStatus } from "@/lib/db/schema";
+import { BUSINESS_ENRICH_STATUS_VALUES, RUN_STATUS_VALUES } from "@/lib/domain/enums";
 
-import { isTerminalRunStatus, RUN_STATUS_BADGE_TONE, TERMINAL_RUN_STATUSES } from "./status";
+import {
+  BUSINESS_ENRICH_STATUS_BADGE_TONE,
+  isTerminalRunStatus,
+  RUN_STATUS_BADGE_TONE,
+  TERMINAL_RUN_STATUSES,
+} from "./status";
 
-const TERMINAL: (typeof runStatus.enumValues)[number][] = [
+const TERMINAL: (typeof RUN_STATUS_VALUES)[number][] = [
   "rejected",
   "completed",
   "failed",
   "canceled",
 ];
-const NON_TERMINAL: (typeof runStatus.enumValues)[number][] = [
+const NON_TERMINAL: (typeof RUN_STATUS_VALUES)[number][] = [
   "queued",
   "discovering",
   "awaiting_approval",
@@ -23,7 +28,7 @@ describe("TERMINAL_RUN_STATUSES", () => {
   });
 
   it("stays in sync with the runStatus enum (no missing or extra values)", () => {
-    const allStatuses = new Set(runStatus.enumValues);
+    const allStatuses = new Set(RUN_STATUS_VALUES);
     const terminalSet = new Set(TERMINAL_RUN_STATUSES);
     for (const s of terminalSet) {
       expect(allStatuses.has(s)).toBe(true);
@@ -46,8 +51,8 @@ describe("isTerminalRunStatus", () => {
 });
 
 describe("RUN_STATUS_BADGE_TONE", () => {
-  it("has an entry for every runStatus enum value (exhaustiveness)", () => {
-    for (const s of runStatus.enumValues) {
+  it("has an entry for every run status value", () => {
+    for (const s of RUN_STATUS_VALUES) {
       expect(RUN_STATUS_BADGE_TONE[s], `missing tone for status '${s}'`).toBeDefined();
     }
   });
@@ -67,5 +72,26 @@ describe("RUN_STATUS_BADGE_TONE", () => {
   it("maps queued/discovering to muted tone", () => {
     expect(RUN_STATUS_BADGE_TONE["queued"]).toBe("muted");
     expect(RUN_STATUS_BADGE_TONE["discovering"]).toBe("muted");
+  });
+});
+
+describe("BUSINESS_ENRICH_STATUS_BADGE_TONE", () => {
+  it("has an entry for every business enrichment status value", () => {
+    for (const s of BUSINESS_ENRICH_STATUS_VALUES) {
+      expect(BUSINESS_ENRICH_STATUS_BADGE_TONE[s], `missing tone for status '${s}'`).toBeDefined();
+    }
+  });
+
+  it("maps active enrichment statuses to active tone", () => {
+    expect(BUSINESS_ENRICH_STATUS_BADGE_TONE["ai_running"]).toBe("active");
+    expect(BUSINESS_ENRICH_STATUS_BADGE_TONE["hunter_running"]).toBe("active");
+    expect(BUSINESS_ENRICH_STATUS_BADGE_TONE["partial"]).toBe("active");
+  });
+
+  it("maps terminal/silent enrichment statuses to their display tones", () => {
+    expect(BUSINESS_ENRICH_STATUS_BADGE_TONE["enriched"]).toBe("success");
+    expect(BUSINESS_ENRICH_STATUS_BADGE_TONE["failed"]).toBe("danger");
+    expect(BUSINESS_ENRICH_STATUS_BADGE_TONE["queued"]).toBe("muted");
+    expect(BUSINESS_ENRICH_STATUS_BADGE_TONE["skipped"]).toBe("muted");
   });
 });

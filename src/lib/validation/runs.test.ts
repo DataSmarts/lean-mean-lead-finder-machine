@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { RUN_STATUS_VALUES } from "@/lib/domain/enums";
+
 import { createRunSchema, runsListQuerySchema, saveAsPresetSchema } from "./runs";
 
 const valid = { city: "Houston", country: "USA", niche: "family law attorney", maxResults: 50 };
@@ -42,9 +44,11 @@ describe("createRunSchema", () => {
 });
 
 describe("runsListQuerySchema", () => {
-  it("accepts a valid run status", () => {
-    const result = runsListQuerySchema.parse({ status: "completed", page: 1 });
-    expect(result.status).toBe("completed");
+  it("accepts each valid run status", () => {
+    for (const value of RUN_STATUS_VALUES) {
+      const result = runsListQuerySchema.parse({ status: value, page: 1 });
+      expect(result.status).toBe(value);
+    }
   });
 
   it("drops an unrecognised status (catch fallback) without throwing", () => {

@@ -1,17 +1,6 @@
-// Client-safe: no @/lib/db, @/lib/env, or service imports.
-// Badge tones map to CSS design tokens in globals.css.
-export type BadgeTone = "muted" | "active" | "success" | "danger";
+import type { BadgeTone, BusinessEnrichStatusValue, RunStatusValue } from "@/lib/domain/enums";
 
-// runStatus enum values: queued|discovering|awaiting_approval|rejected|enriching|completed|failed|canceled
-export type RunStatusValue =
-  | "queued"
-  | "discovering"
-  | "awaiting_approval"
-  | "rejected"
-  | "enriching"
-  | "completed"
-  | "failed"
-  | "canceled";
+export type { BadgeTone, BusinessEnrichStatusValue, RunStatusValue };
 
 export const TERMINAL_RUN_STATUSES = new Set<RunStatusValue>([
   "rejected",
@@ -33,4 +22,14 @@ export const RUN_STATUS_BADGE_TONE: Record<RunStatusValue, BadgeTone> = {
   rejected: "danger",
   failed: "danger",
   canceled: "danger",
+};
+
+export const BUSINESS_ENRICH_STATUS_BADGE_TONE: Record<BusinessEnrichStatusValue, BadgeTone> = {
+  queued: "muted",
+  ai_running: "active",
+  hunter_running: "active",
+  enriched: "success",
+  partial: "active",
+  failed: "danger",
+  skipped: "muted",
 };
