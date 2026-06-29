@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
 import type { CreateRunInput } from "@/lib/services/run";
 import { createRunService } from "@/lib/services/run";
 
@@ -128,7 +129,7 @@ describe("createRun action", () => {
     );
   });
 
-  it("defaults maxResults to 120 when omitted", async () => {
+  it("defaults maxResults when omitted", async () => {
     const { createAndTrigger } = setupService();
     setupPresets();
     const { maxResults: _omit, ...fieldsWithoutMax } = validFields;
@@ -136,7 +137,7 @@ describe("createRun action", () => {
     await createRun({}, formWith(fieldsWithoutMax));
 
     expect(createAndTrigger).toHaveBeenCalledWith(
-      expect.objectContaining<Partial<CreateRunInput>>({ maxResults: 120 }),
+      expect.objectContaining<Partial<CreateRunInput>>({ maxResults: DEFAULT_MAX_RESULTS }),
     );
   });
 

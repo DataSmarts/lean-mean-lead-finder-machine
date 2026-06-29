@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { RUN_DETAIL_POLL_INTERVAL_MS } from "@/lib/config/defaults";
 import type { BadgeTone } from "@/lib/domain/enums";
 import {
   BUSINESS_ENRICH_STATUS_BADGE_TONE,
@@ -55,20 +56,20 @@ export function RunDetailLive({ initial, runId }: Props) {
           if (!cancelled) {
             setDetail(next);
             if (!isTerminalRunStatus(next.run.status)) {
-              timer = setTimeout(tick, 3000);
+              timer = setTimeout(tick, RUN_DETAIL_POLL_INTERVAL_MS);
             }
           }
         } else {
           // Non-2xx: back off and retry to handle transient gateway errors.
-          if (!cancelled) timer = setTimeout(tick, 3000);
+          if (!cancelled) timer = setTimeout(tick, RUN_DETAIL_POLL_INTERVAL_MS);
         }
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
-        if (!cancelled) timer = setTimeout(tick, 3000);
+        if (!cancelled) timer = setTimeout(tick, RUN_DETAIL_POLL_INTERVAL_MS);
       }
     };
 
-    timer = setTimeout(tick, refetchNonce > 0 ? 0 : 3000);
+    timer = setTimeout(tick, refetchNonce > 0 ? 0 : RUN_DETAIL_POLL_INTERVAL_MS);
 
     return () => {
       cancelled = true;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 
 import { savePreset } from "@/app/actions/presets";
+import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
 import type { Preset } from "@/lib/db/presets.repo";
 import { COUNTRIES } from "@/lib/runs/countries";
 
@@ -120,7 +121,7 @@ export function PresetForm({ preset }: Props) {
               name="maxResults"
               type="number"
               className={styles.input}
-              defaultValue={preset?.maxResults ?? 120}
+              defaultValue={preset?.maxResults ?? DEFAULT_MAX_RESULTS}
               min={1}
             />
           </div>

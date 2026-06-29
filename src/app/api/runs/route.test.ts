@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
 
+import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
 import type { CreateRunInput } from "@/lib/services/run";
 import { createRunService } from "@/lib/services/run";
 
@@ -69,6 +70,6 @@ describe("POST /api/runs", () => {
 
     await POST(request({ city: "Houston", country: "USA", niche: "dentists" }));
 
-    expect(createAndTrigger.mock.calls[0][0].maxResults).toBe(120);
+    expect(createAndTrigger.mock.calls[0][0].maxResults).toBe(DEFAULT_MAX_RESULTS);
   });
 });

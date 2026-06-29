@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
 import { RUN_STATUS_VALUES } from "@/lib/domain/enums";
 
 import { createRunSchema, runsListQuerySchema, saveAsPresetSchema } from "./runs";
@@ -11,13 +12,13 @@ describe("createRunSchema", () => {
     expect(createRunSchema.parse(valid)).toMatchObject(valid);
   });
 
-  it("defaults maxResults to 120 when omitted", () => {
+  it("defaults maxResults when omitted", () => {
     const { maxResults } = createRunSchema.parse({
       city: "Houston",
       country: "USA",
       niche: "dentists",
     });
-    expect(maxResults).toBe(120);
+    expect(maxResults).toBe(DEFAULT_MAX_RESULTS);
   });
 
   it("treats neighborhood as optional", () => {

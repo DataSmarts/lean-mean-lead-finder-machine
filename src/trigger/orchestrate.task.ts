@@ -2,6 +2,7 @@ import { task, wait } from "@trigger.dev/sdk";
 
 import { createHttpClient } from "@/lib/clients/http";
 import { createTelegramClient } from "@/lib/clients/telegram";
+import { APPROVAL_IDEMPOTENCY_KEY_TTL, APPROVAL_WAITPOINT_TIMEOUT } from "@/lib/config/defaults";
 import { dbDirect } from "@/lib/db/client";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
 import { env } from "@/lib/env";
@@ -42,9 +43,9 @@ export const orchestrateTask = task({
 
     // idempotencyKey ties the token to this specific run so a task retry reuses the same token.
     const token = await wait.createToken({
-      timeout: "24h",
+      timeout: APPROVAL_WAITPOINT_TIMEOUT,
       idempotencyKey: run.approvalToken,
-      idempotencyKeyTTL: "25h",
+      idempotencyKeyTTL: APPROVAL_IDEMPOTENCY_KEY_TTL,
       tags: [`run:${payload.runId}`],
     });
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/config/defaults";
 import { db } from "@/lib/db/client";
 import type { RunStatusValue } from "@/lib/domain/enums";
 import { RUN_STATUS_BADGE_TONE } from "@/lib/runs/status";
@@ -60,14 +61,13 @@ export default async function RunsPage({ searchParams }: PageProps) {
     page: typeof sp["page"] === "string" ? sp["page"] : undefined,
   });
 
-  const PAGE_SIZE = 20;
   const result = await makeRunsListService(db).list({
     page: query.page,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_LIST_PAGE_SIZE,
     status: query.status,
   });
 
-  const totalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(result.total / DEFAULT_LIST_PAGE_SIZE));
 
   return (
     <div className={styles.page}>

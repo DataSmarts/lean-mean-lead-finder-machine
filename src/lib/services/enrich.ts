@@ -1,3 +1,4 @@
+import { DEFAULT_ENRICH_REUSE_DAYS } from "@/lib/config/defaults";
 import type { Business } from "@/lib/db/businesses.repo";
 import type { NewContact } from "@/lib/db/contacts.repo";
 import type {
@@ -17,7 +18,7 @@ import type { AiEnrichService } from "./ai-enrich";
 import type { HunterEnrichService } from "./hunter-enrich";
 import { merge, type MergedPerson, type SourceContact } from "./merge";
 
-export const DEFAULT_ENRICH_REUSE_DAYS = 30;
+export { DEFAULT_ENRICH_REUSE_DAYS };
 
 // Narrow repo ports (ISP).
 export interface EnrichRunBusinessesRepo {

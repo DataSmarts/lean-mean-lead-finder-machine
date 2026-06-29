@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
+import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
 import { env } from "@/lib/env";
 
 import type { NewPreset } from "./presets.repo";
@@ -15,7 +16,7 @@ const SEED_PRESETS: NewPreset[] = [
     city: "Houston",
     country: "US",
     niche: "family law attorney",
-    maxResults: 120,
+    maxResults: DEFAULT_MAX_RESULTS,
     isActive: false,
     cron: null,
     neighborhood: null,
@@ -25,7 +26,7 @@ const SEED_PRESETS: NewPreset[] = [
     city: "New York City",
     country: "US",
     niche: "dentist",
-    maxResults: 120,
+    maxResults: DEFAULT_MAX_RESULTS,
     isActive: false,
     cron: null,
     neighborhood: null,

@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { createRun } from "@/app/actions/runs";
+import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
 import { COUNTRIES } from "@/lib/runs/countries";
 import { createRunSchema } from "@/lib/validation/runs";
 
@@ -123,7 +124,7 @@ export function NewRunForm() {
           name="maxResults"
           type="number"
           className={styles.input}
-          defaultValue={120}
+          defaultValue={DEFAULT_MAX_RESULTS}
           min={1}
         />
       </div>

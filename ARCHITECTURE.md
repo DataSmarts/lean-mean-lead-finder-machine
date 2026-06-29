@@ -279,6 +279,9 @@ Layer rules: controllers ≤ ~20 lines (parse → service → respond); services
 | `DATABASE_URL_UNPOOLED` | Migrations, tasks | Direct Neon (DDL + workers) |
 | `GOOGLE_MAPS_API_KEY` | App/Tasks | Geocoding + Places |
 | `HUNTER_API_KEY` | Tasks | Hunter domain-search |
+| `HUNTER_LIMIT` | Tasks | default `5`; Hunter domain-search result limit |
+| `ENRICH_BATCH_SIZE` | Tasks | default `25`; fan-out batch size for enrichment tasks |
+| `ENRICH_REUSE_DAYS` | Tasks | default `30`; reusable enrichment lookback window |
 | `OPENROUTER_API_KEY` | Tasks | OpenRouter completions |
 | `OPENROUTER_MODEL` | Tasks | default `google/gemini-3-flash-preview:online` |
 | `TELEGRAM_BOT_TOKEN` | Tasks/webhook | Send/answer approval messages |

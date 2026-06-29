@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
 import { RUN_STATUS_VALUES } from "@/lib/domain/enums";
 
 // Boundary validation for starting a run (dashboard form + POST /api/runs share this).
@@ -8,7 +9,7 @@ export const createRunSchema = z.object({
   city: z.string().min(1),
   country: z.string().min(1),
   niche: z.string().min(1),
-  maxResults: z.number().int().positive().default(120),
+  maxResults: z.number().int().positive().default(DEFAULT_MAX_RESULTS),
 });
 
 export type CreateRunRequest = z.infer<typeof createRunSchema>;

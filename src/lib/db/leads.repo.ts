@@ -1,5 +1,6 @@
 import { and, count, desc, eq, getTableColumns, ilike, or, type SQL } from "drizzle-orm";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/config/defaults";
 import type { ContactSourceValue, EmailVerificationValue } from "@/lib/domain/enums";
 import { wrapDbError } from "@/lib/errors/db-error";
 
@@ -88,7 +89,11 @@ export function makeLeadsRepo(db: AppDatabase) {
   return {
     // Paginated list of merged contacts with composed filters.
     // Runs list + count in parallel; both use the same WHERE predicate.
-    async list({ page, pageSize = 20, ...filter }: LeadsListParams): Promise<LeadsListResult> {
+    async list({
+      page,
+      pageSize = DEFAULT_LIST_PAGE_SIZE,
+      ...filter
+    }: LeadsListParams): Promise<LeadsListResult> {
       const offset = (page - 1) * pageSize;
       const where = buildLeadsWhere(filter);
       try {
