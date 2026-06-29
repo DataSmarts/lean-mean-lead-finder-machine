@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  BUSINESS_ENRICH_STATUS_VALUES,
+  CONTACT_KIND_VALUES,
+  CONTACT_SOURCE_VALUES,
+  EMAIL_VERIFICATION_VALUES,
+  RUN_STATUS_VALUES,
+  SOURCE_STATUS_VALUES,
+  TRIGGER_SOURCE_VALUES,
+} from "@/lib/domain/enums";
+
+import {
   businessEnrichStatus,
   contactKind,
   contactSource,
@@ -14,74 +24,43 @@ import {
 // Drift here would cause a broken migration — caught in CI before touching DB.
 
 describe("runStatus enum", () => {
-  it("matches §6.2 exactly", () => {
-    expect(runStatus.enumValues).toEqual([
-      "queued",
-      "discovering",
-      "awaiting_approval",
-      "rejected",
-      "enriching",
-      "completed",
-      "failed",
-      "canceled",
-    ]);
+  it("uses the shared domain values", () => {
+    expect(runStatus.enumValues).toEqual(RUN_STATUS_VALUES);
   });
 });
 
 describe("businessEnrichStatus enum", () => {
-  it("matches §6.2 exactly", () => {
-    expect(businessEnrichStatus.enumValues).toEqual([
-      "queued",
-      "ai_running",
-      "hunter_running",
-      "enriched",
-      "partial",
-      "failed",
-      "skipped",
-    ]);
+  it("uses the shared domain values", () => {
+    expect(businessEnrichStatus.enumValues).toEqual(BUSINESS_ENRICH_STATUS_VALUES);
   });
 });
 
 describe("emailVerification enum", () => {
-  it("matches §6.2 exactly", () => {
-    expect(emailVerification.enumValues).toEqual([
-      "valid",
-      "invalid",
-      "accept_all",
-      "webmail",
-      "disposable",
-      "unknown",
-      "unverified",
-    ]);
+  it("uses the shared domain values", () => {
+    expect(emailVerification.enumValues).toEqual(EMAIL_VERIFICATION_VALUES);
   });
 });
 
 describe("sourceStatus enum", () => {
-  it("has the correct values", () => {
-    expect(sourceStatus.enumValues).toEqual([
-      "queued",
-      "running",
-      "succeeded",
-      "failed",
-      "skipped",
-    ]);
+  it("uses the shared domain values", () => {
+    expect(sourceStatus.enumValues).toEqual(SOURCE_STATUS_VALUES);
   });
 });
 
 describe("triggerSource enum", () => {
-  it("has the correct values", () => {
-    expect(triggerSource.enumValues).toEqual(["dashboard", "schedule", "api"]);
+  it("uses the shared domain values", () => {
+    expect(triggerSource.enumValues).toEqual(TRIGGER_SOURCE_VALUES);
   });
 });
 
 describe("contactSource enum", () => {
-  it("has the correct values", () => {
-    expect(contactSource.enumValues).toEqual(["ai", "hunter"]);
+  it("uses the shared domain values", () => {
+    expect(contactSource.enumValues).toEqual(CONTACT_SOURCE_VALUES);
   });
 });
 
 describe("contactKind enum", () => {
-  it("has the correct values", () => {
-    expect(contactKind.enumValues).toEqual(["person", "merged"]);
+  it("uses the shared domain values", () => {
+    expect(contactKind.enumValues).toEqual(CONTACT_KIND_VALUES);
   });
 });

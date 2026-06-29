@@ -1,18 +1,6 @@
-// Client-safe: no DB or service imports.
-// Mirrors the badge-tone pattern from src/lib/runs/status.ts.
+import type { BadgeTone, ContactSourceValue, EmailVerificationValue } from "@/lib/domain/enums";
 
-import type { BadgeTone } from "@/lib/runs/status";
-
-export type ContactSourceValue = "ai" | "hunter";
-
-export type EmailVerificationValue =
-  | "valid"
-  | "invalid"
-  | "accept_all"
-  | "webmail"
-  | "disposable"
-  | "unknown"
-  | "unverified";
+export type { ContactSourceValue, EmailVerificationValue };
 
 // Derives which sources contributed to a merged contact for display as badges.
 // Falls back to [winningSource] when fieldSources is null/empty.

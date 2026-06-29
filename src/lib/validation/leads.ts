@@ -1,18 +1,6 @@
 import { z } from "zod";
 
-// Valid email_verification enum values (mirror the DB enum in schema/enums.ts).
-const EMAIL_VERIFICATION_VALUES = [
-  "valid",
-  "invalid",
-  "accept_all",
-  "webmail",
-  "disposable",
-  "unknown",
-  "unverified",
-] as const;
-
-// Valid contact_source values for the winning-source filter.
-const CONTACT_SOURCE_VALUES = ["ai", "hunter"] as const;
+import { CONTACT_SOURCE_VALUES, EMAIL_VERIFICATION_VALUES } from "@/lib/domain/enums";
 
 // Query params for the consolidated leads list page.
 // All optional fields use .catch() so invalid values silently fall back to undefined / the default.

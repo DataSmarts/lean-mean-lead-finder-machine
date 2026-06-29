@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { deriveSourceBadges } from "./source-badge";
+import { EMAIL_VERIFICATION_VALUES } from "@/lib/domain/enums";
+
+import { deriveSourceBadges, EMAIL_VERIFICATION_BADGE_TONE } from "./source-badge";
 
 describe("deriveSourceBadges", () => {
   it("returns both sources when fieldSources contains both", () => {
@@ -32,5 +34,13 @@ describe("deriveSourceBadges", () => {
     const fieldSources = { email: "hunter" as const, linkedin_url: "ai" as const };
     const badges = deriveSourceBadges(fieldSources, "hunter");
     expect(badges).toEqual(["ai", "hunter"]);
+  });
+});
+
+describe("EMAIL_VERIFICATION_BADGE_TONE", () => {
+  it("has an entry for every email verification value", () => {
+    for (const value of EMAIL_VERIFICATION_VALUES) {
+      expect(EMAIL_VERIFICATION_BADGE_TONE[value]).toBeDefined();
+    }
   });
 });

@@ -1,8 +1,7 @@
 import { and, count, desc, eq, getTableColumns, ilike, or, type SQL } from "drizzle-orm";
 
+import type { ContactSourceValue, EmailVerificationValue } from "@/lib/domain/enums";
 import { wrapDbError } from "@/lib/errors/db-error";
-import type { EmailVerificationValue } from "@/lib/leads/source-badge";
-import type { ContactSourceValue } from "@/lib/leads/source-badge";
 
 import type { Business } from "./businesses.repo";
 import type { AppDatabase } from "./client";

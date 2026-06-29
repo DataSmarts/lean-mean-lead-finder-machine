@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import type { BadgeTone, RunStatusValue } from "@/lib/runs/status";
-import { isTerminalRunStatus, RUN_STATUS_BADGE_TONE } from "@/lib/runs/status";
+import type { BadgeTone } from "@/lib/domain/enums";
+import {
+  BUSINESS_ENRICH_STATUS_BADGE_TONE,
+  isTerminalRunStatus,
+  RUN_STATUS_BADGE_TONE,
+} from "@/lib/runs/status";
 import type { RunDetailView } from "@/lib/services/run-read";
 
 import { ApprovalControls } from "./approval-controls";
@@ -31,13 +35,13 @@ export function RunDetailLive({ initial, runId }: Props) {
   const [refetchNonce, setRefetchNonce] = useState(0);
 
   const { run } = detail;
-  const status = run.status as RunStatusValue;
-  const tone = RUN_STATUS_BADGE_TONE[status];
+  const status = run.status;
+  const tone = RUN_STATUS_BADGE_TONE[run.status];
   const isActive = tone === "active";
 
   useEffect(() => {
     // Dep on `refetchNonce` allows ApprovalControls to trigger an immediate refetch.
-    if (isTerminalRunStatus(initial.run.status as RunStatusValue) && refetchNonce === 0) return;
+    if (isTerminalRunStatus(initial.run.status) && refetchNonce === 0) return;
 
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -50,7 +54,7 @@ export function RunDetailLive({ initial, runId }: Props) {
           const next = (await res.json()) as RunDetailView;
           if (!cancelled) {
             setDetail(next);
-            if (!isTerminalRunStatus(next.run.status as RunStatusValue)) {
+            if (!isTerminalRunStatus(next.run.status)) {
               timer = setTimeout(tick, 3000);
             }
           }
@@ -152,8 +156,7 @@ export function RunDetailLive({ initial, runId }: Props) {
               </thead>
               <tbody className={styles.tbody}>
                 {detail.businesses.map(({ runBusiness, business, contacts }) => {
-                  const rbTone =
-                    RUN_STATUS_BADGE_TONE[runBusiness.enrichStatus as RunStatusValue] ?? "muted";
+                  const rbTone = BUSINESS_ENRICH_STATUS_BADGE_TONE[runBusiness.enrichStatus];
                   return (
                     <tr key={runBusiness.id}>
                       <td>
@@ -177,7 +180,7 @@ export function RunDetailLive({ initial, runId }: Props) {
                         )}
                       </td>
                       <td>
-                        <span className={badgeClass(rbTone as BadgeTone)}>
+                        <span className={badgeClass(rbTone)}>
                           <span className={styles.badgeDot} aria-hidden />
                           {runBusiness.enrichStatus.replace(/_/g, " ")}
                         </span>

@@ -1,17 +1,20 @@
 import { and, asc, count, desc, eq, getTableColumns, gte, inArray, ne } from "drizzle-orm";
 
+import type {
+  BusinessEnrichStatusValue,
+  SourceStatusValue as DomainSourceStatusValue,
+} from "@/lib/domain/enums";
 import { wrapDbError } from "@/lib/errors/db-error";
 
 import type { Business } from "./businesses.repo";
 import type { AppDatabase } from "./client";
-import type { businessEnrichStatus, sourceStatus } from "./schema";
 import { businesses, runBusinesses } from "./schema";
 import { withUpdatedAt } from "./timestamp";
 
 export type RunBusiness = typeof runBusinesses.$inferSelect;
 
-export type EnrichStatusValue = (typeof businessEnrichStatus.enumValues)[number];
-export type SourceStatusValue = (typeof sourceStatus.enumValues)[number];
+export type EnrichStatusValue = BusinessEnrichStatusValue;
+export type SourceStatusValue = DomainSourceStatusValue;
 
 export interface StatusUpdate {
   enrichStatus?: EnrichStatusValue;

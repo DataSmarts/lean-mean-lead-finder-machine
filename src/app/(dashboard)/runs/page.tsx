@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { db } from "@/lib/db/client";
-import type { RunStatusValue } from "@/lib/runs/status";
+import type { RunStatusValue } from "@/lib/domain/enums";
 import { RUN_STATUS_BADGE_TONE } from "@/lib/runs/status";
 import { makeRunsListService } from "@/lib/services/runs-list";
 import { runsListQuerySchema } from "@/lib/validation/runs";
@@ -127,7 +127,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
             </thead>
             <tbody className={styles.tbody}>
               {result.runs.map((run) => {
-                const tone = RUN_STATUS_BADGE_TONE[run.status as RunStatusValue];
+                const tone = RUN_STATUS_BADGE_TONE[run.status];
                 const location = [run.neighborhood, run.city, run.country]
                   .filter(Boolean)
                   .join(", ");

@@ -111,7 +111,7 @@ function sourceContactToNewContact(
     title: sc.title,
     email: sc.email,
     emailConfidence: sc.emailConfidence,
-    emailVerification: (sc.emailVerification as NewContact["emailVerification"]) ?? "unverified",
+    emailVerification: sc.emailVerification ?? "unverified",
     seniority: sc.seniority,
     department: sc.department,
     phone: sc.phone,
@@ -141,8 +141,7 @@ function mergedPersonToNewContact(
     title: person.title,
     email: person.email,
     emailConfidence: person.emailConfidence,
-    emailVerification:
-      (person.emailVerification as NewContact["emailVerification"]) ?? "unverified",
+    emailVerification: person.emailVerification ?? "unverified",
     seniority: person.seniority,
     department: person.department,
     phone: person.phone,

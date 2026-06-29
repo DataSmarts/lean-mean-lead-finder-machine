@@ -1,11 +1,8 @@
 import type { AppDatabase } from "@/lib/db/client";
 import type { LeadRow, LeadsListParams, LeadsListResult } from "@/lib/db/leads.repo";
 import { makeLeadsRepo } from "@/lib/db/leads.repo";
-import {
-  type ContactSourceValue,
-  deriveSourceBadges,
-  type EmailVerificationValue,
-} from "@/lib/leads/source-badge";
+import type { ContactSourceValue, EmailVerificationValue } from "@/lib/domain/enums";
+import { deriveSourceBadges } from "@/lib/leads/source-badge";
 
 // --- Narrow ISP port ----------------------------------------------------------
 
@@ -62,11 +59,11 @@ function toLeadRowView(row: LeadRow): LeadRowView {
     title: contact.title,
     email: contact.email,
     emailConfidence: contact.emailConfidence,
-    emailVerification: contact.emailVerification as EmailVerificationValue,
-    source: contact.source as ContactSourceValue,
+    emailVerification: contact.emailVerification,
+    source: contact.source,
     sourceBadges: deriveSourceBadges(
       contact.fieldSources as Record<string, "ai" | "hunter"> | null,
-      contact.source as ContactSourceValue,
+      contact.source,
     ),
     linkedinUrl: contact.linkedinUrl,
     instagramUrl: contact.instagramUrl,
