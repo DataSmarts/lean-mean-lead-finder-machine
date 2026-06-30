@@ -1,5 +1,6 @@
 import type { EnrichStatusValue } from "@/lib/db/run-businesses.repo";
 import type { Run } from "@/lib/db/runs.repo";
+import { calculateFinalCounters } from "@/lib/domain/enrich-policy";
 
 // Narrow repo ports (ISP) — finalize only uses these operations.
 export interface FinalizeRunsRepo {
@@ -58,11 +59,10 @@ export function createFinalizeService({
         contactsRepo.countMerged(runId),
       ]);
 
-      const businessesEnriched = (counts.enriched ?? 0) + (counts.partial ?? 0);
-      const businessesFailed = counts.failed ?? 0;
+      const counters = calculateFinalCounters({ counts, contactsFound });
       const status = determineRunStatus(counts);
 
-      await runsRepo.setCounters(runId, { businessesEnriched, businessesFailed, contactsFound });
+      await runsRepo.setCounters(runId, counters);
       await runsRepo.updateStatus(runId, status, { finishedAt: new Date() });
 
       return { status };

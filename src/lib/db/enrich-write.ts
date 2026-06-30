@@ -1,6 +1,8 @@
 import { and, eq, inArray } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
+import { calculateTerminalCounterDeltas, type RunCounterDeltas } from "@/lib/domain/enrich-policy";
+
 import type { NewContact } from "./contacts.repo";
 import { makeContactsRepo } from "./contacts.repo";
 import {
@@ -27,18 +29,21 @@ export interface PersistEnrichmentArgs {
   readonly rawContacts: readonly RawContactWithIndex[];
   // One entry per merged person; parallel-indexed with mergedPersonIndex above.
   readonly mergedContacts: readonly NewContact[];
+  readonly status: EnrichmentPersistenceStatus;
+  readonly counterDeltas: RunCounterDeltas;
+}
+
+export interface EnrichmentPersistenceStatus {
   readonly enrichStatus: EnrichStatusValue;
   readonly aiStatus: SourceStatusValue;
   readonly hunterStatus: SourceStatusValue;
   readonly aiError: string | null;
   readonly hunterError: string | null;
-  // The enrich_status before this write — used to guard counter bumps against double-counting on retry.
-  readonly prevEnrichStatus: EnrichStatusValue;
 }
 
 export type PersistEnrichment = (
   args: PersistEnrichmentArgs,
-) => Promise<{ newlyTerminal: boolean }>;
+) => Promise<{ counterDeltas: RunCounterDeltas }>;
 
 // ── PersistReuseEnrichment ───────────────────────────────────────────────────
 
@@ -47,16 +52,15 @@ export interface PersistReuseEnrichmentArgs {
   readonly runBusinessId: string;
   readonly businessId: string;
   readonly sourceRunId: string;
-  readonly prevEnrichStatus: EnrichStatusValue;
+  readonly previousEnrichStatus: EnrichStatusValue;
+  readonly status: EnrichmentPersistenceStatus;
 }
 
 export type PersistReuseEnrichment = (
   args: PersistReuseEnrichmentArgs,
-) => Promise<{ contactsCopied: number }>;
+) => Promise<{ contactsCopied: number; counterDeltas: RunCounterDeltas }>;
 
 // ── Factory ──────────────────────────────────────────────────────────────────
-
-const TERMINAL_STATUSES: EnrichStatusValue[] = ["enriched", "partial", "failed"];
 
 function rawNullEmailSources(rawContacts: readonly RawContactWithIndex[]): NewContact["source"][] {
   return Array.from(
@@ -84,6 +88,22 @@ async function deleteMergedContacts(
     );
 }
 
+async function applyRunCounterDeltas(
+  runsRepo: ReturnType<typeof makeRunsRepo>,
+  runId: string,
+  counterDeltas: RunCounterDeltas,
+): Promise<void> {
+  if (counterDeltas.businessesEnriched > 0) {
+    await runsRepo.incrementCounter(runId, "businessesEnriched", counterDeltas.businessesEnriched);
+  }
+  if (counterDeltas.businessesFailed > 0) {
+    await runsRepo.incrementCounter(runId, "businessesFailed", counterDeltas.businessesFailed);
+  }
+  if (counterDeltas.contactsFound > 0) {
+    await runsRepo.incrementCounter(runId, "contactsFound", counterDeltas.contactsFound);
+  }
+}
+
 export function createEnrichWriter(db: PostgresJsDatabase<typeof schema>): {
   persist: PersistEnrichment;
   persistReuse: PersistReuseEnrichment;
@@ -94,12 +114,8 @@ export function createEnrichWriter(db: PostgresJsDatabase<typeof schema>): {
     businessId,
     rawContacts,
     mergedContacts,
-    enrichStatus,
-    aiStatus,
-    hunterStatus,
-    aiError,
-    hunterError,
-    prevEnrichStatus,
+    status,
+    counterDeltas,
   }) =>
     db.transaction(async (tx) => {
       const contactsRepo = makeContactsRepo(tx);
@@ -142,29 +158,19 @@ export function createEnrichWriter(db: PostgresJsDatabase<typeof schema>): {
 
       // 5. Update run_business status.
       await runBusinessesRepo.updateStatus(runBusinessId, {
-        enrichStatus,
-        aiStatus,
-        hunterStatus,
-        aiError,
-        hunterError,
+        enrichStatus: status.enrichStatus,
+        aiStatus: status.aiStatus,
+        hunterStatus: status.hunterStatus,
+        aiError: status.aiError,
+        hunterError: status.hunterError,
         enrichedAt: new Date(),
         attempts: undefined, // let the task layer manage attempt count separately
       });
 
-      // 6. Guarded counter bumps — only on first transition to a terminal status.
-      const newlyTerminal = !TERMINAL_STATUSES.includes(prevEnrichStatus);
-      if (newlyTerminal) {
-        if (enrichStatus === "enriched" || enrichStatus === "partial") {
-          await runsRepo.incrementCounter(runId, "businessesEnriched");
-        } else if (enrichStatus === "failed") {
-          await runsRepo.incrementCounter(runId, "businessesFailed");
-        }
-        if (mergedContacts.length > 0) {
-          await runsRepo.incrementCounter(runId, "contactsFound", mergedContacts.length);
-        }
-      }
+      // 6. Apply the service-provided counter plan inside the same transaction.
+      await applyRunCounterDeltas(runsRepo, runId, counterDeltas);
 
-      return { newlyTerminal };
+      return { counterDeltas };
     });
 
   const persistReuse: PersistReuseEnrichment = ({
@@ -172,7 +178,8 @@ export function createEnrichWriter(db: PostgresJsDatabase<typeof schema>): {
     runBusinessId,
     businessId,
     sourceRunId,
-    prevEnrichStatus,
+    previousEnrichStatus,
+    status,
   }) =>
     db.transaction(async (tx) => {
       const contactsRepo = makeContactsRepo(tx);
@@ -214,20 +221,23 @@ export function createEnrichWriter(db: PostgresJsDatabase<typeof schema>): {
       }
 
       await runBusinessesRepo.updateStatus(runBusinessId, {
-        enrichStatus: "enriched",
+        enrichStatus: status.enrichStatus,
+        aiStatus: status.aiStatus,
+        hunterStatus: status.hunterStatus,
+        aiError: status.aiError,
+        hunterError: status.hunterError,
         enrichedAt: new Date(),
       });
 
-      const newlyTerminal = !TERMINAL_STATUSES.includes(prevEnrichStatus);
       const mergedCount = priorMerged.length;
-      if (newlyTerminal) {
-        await runsRepo.incrementCounter(runId, "businessesEnriched");
-        if (mergedCount > 0) {
-          await runsRepo.incrementCounter(runId, "contactsFound", mergedCount);
-        }
-      }
+      const counterDeltas = calculateTerminalCounterDeltas({
+        previousStatus: previousEnrichStatus,
+        nextStatus: status.enrichStatus,
+        mergedContactCount: mergedCount,
+      });
+      await applyRunCounterDeltas(runsRepo, runId, counterDeltas);
 
-      return { contactsCopied: priorContacts.length };
+      return { contactsCopied: priorContacts.length, counterDeltas };
     });
 
   return { persist, persistReuse };
