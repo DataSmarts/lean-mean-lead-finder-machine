@@ -1,20 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { LeadsExportService } from "@/app/api/leads/export/route";
 import type { LeadRow } from "@/lib/db/leads.repo";
 
 vi.mock("@/lib/db/client", () => ({ db: {} }));
-vi.mock("@/app/api/leads/export/route", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/app/api/leads/export/route")>();
-  return actual;
-});
-
-// Re-mock the export service factory so we control what rows are returned.
-vi.mock("@/lib/services/leads-export", () => ({
-  makeLeadsExportService: vi.fn(),
+vi.mock("@/lib/db/leads.repo", () => ({
+  makeLeadsRepo: vi.fn(),
 }));
 
-import { makeLeadsExportService } from "@/lib/services/leads-export";
+import { makeLeadsRepo } from "@/lib/db/leads.repo";
 
 import { GET } from "./route";
 
@@ -99,12 +92,16 @@ function makeRequest(search = ""): Request {
   return new Request(`http://localhost/api/leads/export${search}`);
 }
 
+function mockLeadsRepo(exportMerged: ReturnType<typeof vi.fn>): void {
+  vi.mocked(makeLeadsRepo).mockReturnValue({
+    exportMerged,
+  } as unknown as ReturnType<typeof makeLeadsRepo>);
+}
+
 describe("GET /api/leads/export", () => {
   it("returns 200 with Content-Type text/csv", async () => {
     const exportMerged = vi.fn().mockResolvedValue([makeRow()]);
-    vi.mocked(makeLeadsExportService).mockReturnValue({
-      exportMerged,
-    } as unknown as LeadsExportService);
+    mockLeadsRepo(exportMerged);
 
     const res = await GET(makeRequest());
 
@@ -114,9 +111,7 @@ describe("GET /api/leads/export", () => {
 
   it("sets Content-Disposition as attachment", async () => {
     const exportMerged = vi.fn().mockResolvedValue([makeRow()]);
-    vi.mocked(makeLeadsExportService).mockReturnValue({
-      exportMerged,
-    } as unknown as LeadsExportService);
+    mockLeadsRepo(exportMerged);
 
     const res = await GET(makeRequest());
 
@@ -125,9 +120,7 @@ describe("GET /api/leads/export", () => {
 
   it("returns CSV with header and data rows in the body", async () => {
     const exportMerged = vi.fn().mockResolvedValue([makeRow()]);
-    vi.mocked(makeLeadsExportService).mockReturnValue({
-      exportMerged,
-    } as unknown as LeadsExportService);
+    mockLeadsRepo(exportMerged);
 
     const res = await GET(makeRequest());
     const text = await res.text();
@@ -138,9 +131,7 @@ describe("GET /api/leads/export", () => {
 
   it("passes filter querystring to the export service", async () => {
     const exportMerged = vi.fn().mockResolvedValue([]);
-    vi.mocked(makeLeadsExportService).mockReturnValue({
-      exportMerged,
-    } as unknown as LeadsExportService);
+    mockLeadsRepo(exportMerged);
 
     await GET(makeRequest("?source=hunter&verification=valid"));
 

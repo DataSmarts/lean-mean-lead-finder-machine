@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Run } from "@/lib/db/runs.repo";
 
-import type { LeadsExportService } from "./leads-export";
+import type { RunExportLeadsRepo } from "./run-export";
 import { createRunExportService } from "./run-export";
 
 function makeRun(): Run {
@@ -14,27 +14,27 @@ function setup(run?: Run) {
   const runsRepo = {
     findById: vi.fn().mockResolvedValue(resolvedRun),
   };
-  const leadsExportService = {
+  const leadsRepo = {
     exportMerged: vi.fn().mockResolvedValue([]),
     exportRaw: vi.fn().mockResolvedValue([]),
-  } satisfies LeadsExportService;
-  const service = createRunExportService({ runsRepo, leadsExportService });
-  return { leadsExportService, runsRepo, service };
+  } satisfies RunExportLeadsRepo;
+  const service = createRunExportService({ runsRepo, leadsRepo });
+  return { leadsRepo, runsRepo, service };
 }
 
 describe("createRunExportService", () => {
   it("returns not_found when the run does not exist", async () => {
-    const { leadsExportService, service } = setup(undefined);
+    const { leadsRepo, service } = setup(undefined);
 
     const result = await service.exportRun({ runId: "missing", raw: false });
 
     expect(result.status).toBe("not_found");
-    expect(leadsExportService.exportMerged).not.toHaveBeenCalled();
-    expect(leadsExportService.exportRaw).not.toHaveBeenCalled();
+    expect(leadsRepo.exportMerged).not.toHaveBeenCalled();
+    expect(leadsRepo.exportRaw).not.toHaveBeenCalled();
   });
 
   it("exports merged contacts by default", async () => {
-    const { leadsExportService, service } = setup();
+    const { leadsRepo, service } = setup();
 
     const result = await service.exportRun({ runId: "run-1", raw: false });
 
@@ -43,12 +43,12 @@ describe("createRunExportService", () => {
       filename: "run-run-1-merged.csv",
     });
     expect(result.status === "ok" ? result.csv : "").toContain("Field Sources");
-    expect(leadsExportService.exportMerged).toHaveBeenCalledWith({ runId: "run-1" });
-    expect(leadsExportService.exportRaw).not.toHaveBeenCalled();
+    expect(leadsRepo.exportMerged).toHaveBeenCalledWith({ runId: "run-1" });
+    expect(leadsRepo.exportRaw).not.toHaveBeenCalled();
   });
 
   it("exports raw contacts when requested", async () => {
-    const { leadsExportService, service } = setup();
+    const { leadsRepo, service } = setup();
 
     const result = await service.exportRun({ runId: "run-1", raw: true });
 
@@ -58,7 +58,7 @@ describe("createRunExportService", () => {
     });
     expect(result.status === "ok" ? result.csv : "").toContain("Source");
     expect(result.status === "ok" ? result.csv : "").not.toContain("Field Sources");
-    expect(leadsExportService.exportRaw).toHaveBeenCalledWith("run-1");
-    expect(leadsExportService.exportMerged).not.toHaveBeenCalled();
+    expect(leadsRepo.exportRaw).toHaveBeenCalledWith("run-1");
+    expect(leadsRepo.exportMerged).not.toHaveBeenCalled();
   });
 });

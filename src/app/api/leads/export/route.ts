@@ -2,12 +2,9 @@
 export const dynamic = "force-dynamic";
 
 import { db } from "@/lib/db/client";
+import { makeLeadsRepo } from "@/lib/db/leads.repo";
 import { mergedToCsv } from "@/lib/services/export";
-import type { LeadsExportService } from "@/lib/services/leads-export";
-import { makeLeadsExportService } from "@/lib/services/leads-export";
 import { leadsListQuerySchema } from "@/lib/validation/leads";
-
-export type { LeadsExportService };
 
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
@@ -16,8 +13,7 @@ export async function GET(request: Request): Promise<Response> {
   // page is not meaningful for an unbounded export — drop it from the filter.
   const { page: _page, ...exportFilter } = filter;
 
-  const service = makeLeadsExportService(db);
-  const rows = await service.exportMerged(exportFilter);
+  const rows = await makeLeadsRepo(db).exportMerged(exportFilter);
   const csv = mergedToCsv(rows);
 
   const filename = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
