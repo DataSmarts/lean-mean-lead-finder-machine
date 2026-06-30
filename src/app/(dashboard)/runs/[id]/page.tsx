@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { makeRunReadService } from "@/lib/services/run-read";
 
 import styles from "./run-detail.module.css";
@@ -14,7 +14,7 @@ interface PageProps {
 
 export default async function RunDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const view = await makeRunReadService(db).getDetail(id);
+  const view = await makeRunReadService(getDb()).getDetail(id);
   if (!view) notFound();
 
   return (

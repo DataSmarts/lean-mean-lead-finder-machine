@@ -3,7 +3,7 @@ import { task, wait } from "@trigger.dev/sdk";
 import { createHttpClient } from "@/lib/clients/http";
 import { createTelegramClient } from "@/lib/clients/telegram";
 import { APPROVAL_IDEMPOTENCY_KEY_TTL, APPROVAL_WAITPOINT_TIMEOUT } from "@/lib/config/defaults";
-import { dbDirect } from "@/lib/db/client";
+import { getDbDirect } from "@/lib/db/client";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
 import { env } from "@/lib/env";
 import { PipelineStateError } from "@/lib/errors";
@@ -28,7 +28,7 @@ export const orchestrateTask = task({
   run: async (payload: { runId: string }) => {
     const http = createHttpClient();
     const telegram = createTelegramClient({ http, botToken: env.TELEGRAM_BOT_TOKEN });
-    const runsRepo = makeRunsRepo(dbDirect);
+    const runsRepo = makeRunsRepo(getDbDirect());
 
     await runsRepo.updateStatus(payload.runId, "discovering", { startedAt: new Date() });
     const discovery = await discoverTask.triggerAndWait({ runId: payload.runId }).unwrap();

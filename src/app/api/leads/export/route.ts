@@ -1,7 +1,7 @@
 // Authenticated by the proxy gate (src/proxy.ts). No per-route auth code required.
 export const dynamic = "force-dynamic";
 
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { makeLeadsRepo } from "@/lib/db/leads.repo";
 import { mergedToCsv } from "@/lib/services/export";
 import { leadsListQuerySchema } from "@/lib/validation/leads";
@@ -13,7 +13,7 @@ export async function GET(request: Request): Promise<Response> {
   // page is not meaningful for an unbounded export — drop it from the filter.
   const { page: _page, ...exportFilter } = filter;
 
-  const rows = await makeLeadsRepo(db).exportMerged(exportFilter);
+  const rows = await makeLeadsRepo(getDb()).exportMerged(exportFilter);
   const csv = mergedToCsv(rows);
 
   const filename = `leads-${new Date().toISOString().slice(0, 10)}.csv`;

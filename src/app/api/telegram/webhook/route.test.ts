@@ -13,7 +13,7 @@ vi.mock("@/lib/clients/telegram", () => ({ createTelegramClient: vi.fn() }));
 vi.mock("@trigger.dev/sdk", () => ({
   wait: { completeToken: vi.fn().mockResolvedValue({ success: true }) },
 }));
-vi.mock("@/lib/db/client", () => ({ db: {} }));
+vi.mock("@/lib/db/client", () => ({ getDb: vi.fn(() => ({})) }));
 vi.mock("@/lib/db/runs.repo", () => ({ makeRunsRepo: vi.fn() }));
 
 function request(body: unknown, headers: Record<string, string> = {}): NextRequest {

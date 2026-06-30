@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { LeadRow } from "@/lib/db/leads.repo";
 
-vi.mock("@/lib/db/client", () => ({ db: {} }));
+vi.mock("@/lib/db/client", () => ({ getDb: vi.fn(() => ({})) }));
 vi.mock("@/lib/db/leads.repo", () => ({
   makeLeadsRepo: vi.fn(),
 }));

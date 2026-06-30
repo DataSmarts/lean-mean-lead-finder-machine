@@ -1,6 +1,6 @@
 import { task } from "@trigger.dev/sdk";
 
-import { dbDirect } from "@/lib/db/client";
+import { getDbDirect } from "@/lib/db/client";
 import { makeContactsRepo } from "@/lib/db/contacts.repo";
 import { makeRunBusinessesRepo } from "@/lib/db/run-businesses.repo";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
@@ -17,10 +17,11 @@ export const finalizeRunTask = task({
       runId: payload.runId,
     }),
   run: async (payload: { runId: string }) => {
+    const db = getDbDirect();
     const service = createFinalizeService({
-      runsRepo: makeRunsRepo(dbDirect),
-      runBusinessesRepo: makeRunBusinessesRepo(dbDirect),
-      contactsRepo: makeContactsRepo(dbDirect),
+      runsRepo: makeRunsRepo(db),
+      runBusinessesRepo: makeRunBusinessesRepo(db),
+      contactsRepo: makeContactsRepo(db),
     });
     return service.finalize(payload.runId);
   },

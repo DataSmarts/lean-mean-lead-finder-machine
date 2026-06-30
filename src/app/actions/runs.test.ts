@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
 vi.mock("@/lib/services/run", () => ({ createRunService: vi.fn() }));
 vi.mock("@/lib/clients/trigger", () => ({ createLeadRunTrigger: vi.fn(() => ({})) }));
-vi.mock("@/lib/db/client", () => ({ db: {} }));
+vi.mock("@/lib/db/client", () => ({ getDb: vi.fn(() => ({})) }));
 vi.mock("@/lib/db/presets.repo", () => ({ makePresetsRepo: vi.fn() }));
 
 import { makePresetsRepo } from "@/lib/db/presets.repo";
