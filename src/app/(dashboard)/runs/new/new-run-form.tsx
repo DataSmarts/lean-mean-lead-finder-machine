@@ -5,13 +5,14 @@ import { useActionState, useState } from "react";
 import { createRun } from "@/app/actions/runs";
 import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
 import { COUNTRIES } from "@/lib/runs/countries";
-import { createRunSchema } from "@/lib/validation/runs";
+import { parseCreateRunFormData } from "@/lib/validation/runs";
 
 import styles from "./new-run-form.module.css";
 
 interface FieldErrors {
   niche?: string;
   city?: string;
+  maxResults?: string;
   presetName?: string;
 }
 
@@ -22,30 +23,16 @@ export function NewRunForm() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     const fd = new FormData(e.currentTarget);
-    const rawMaxResults = fd.get("maxResults");
-    const input = {
-      niche: (fd.get("niche") as string) || undefined,
-      // Empty string → undefined so optional min(1) field passes validation.
-      neighborhood: (fd.get("neighborhood") as string) || undefined,
-      city: (fd.get("city") as string) || undefined,
-      country: (fd.get("country") as string) || undefined,
-      maxResults: rawMaxResults ? Number(rawMaxResults) : undefined,
-    };
-
-    const result = createRunSchema.safeParse(input);
+    const result = parseCreateRunFormData(fd);
     if (!result.success) {
       e.preventDefault();
       const flat = result.error.flatten().fieldErrors;
       setFieldErrors({
         niche: flat.niche?.[0],
         city: flat.city?.[0],
+        maxResults: flat.maxResults?.[0],
+        presetName: flat.presetName?.[0],
       });
-      return;
-    }
-
-    if (saveAsPreset && !(fd.get("presetName") as string)) {
-      e.preventDefault();
-      setFieldErrors({ presetName: "Preset name is required." });
       return;
     }
 
@@ -127,6 +114,9 @@ export function NewRunForm() {
           defaultValue={DEFAULT_MAX_RESULTS}
           min={1}
         />
+        {fieldErrors.maxResults ? (
+          <p className={styles.fieldError}>{fieldErrors.maxResults}</p>
+        ) : null}
       </div>
 
       <div className={styles.divider} />
