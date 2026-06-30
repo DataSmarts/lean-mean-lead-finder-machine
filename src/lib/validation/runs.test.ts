@@ -3,9 +3,17 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_MAX_RESULTS } from "@/lib/config/defaults";
 import { RUN_STATUS_VALUES } from "@/lib/domain/enums";
 
-import { createRunSchema, runsListQuerySchema, saveAsPresetSchema } from "./runs";
+import { createRunSchema, parseCreateRunFormData, runsListQuerySchema } from "./runs";
 
 const valid = { city: "Houston", country: "USA", niche: "family law attorney", maxResults: 50 };
+
+function formWith(fields: Record<string, string | undefined>): FormData {
+  const formData = new FormData();
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined) formData.set(key, value);
+  }
+  return formData;
+}
 
 describe("createRunSchema", () => {
   it("parses a valid request", () => {
@@ -41,6 +49,56 @@ describe("createRunSchema", () => {
 
   it("rejects a non-integer maxResults", () => {
     expect(createRunSchema.safeParse({ ...valid, maxResults: 10.5 }).success).toBe(false);
+  });
+
+  it("rejects a string maxResults so API JSON semantics stay explicit", () => {
+    expect(createRunSchema.safeParse({ ...valid, maxResults: "50" }).success).toBe(false);
+  });
+});
+
+describe("parseCreateRunFormData", () => {
+  it("coerces maxResults from a form string", () => {
+    const result = parseCreateRunFormData(formWith({ ...valid, maxResults: "75" }));
+
+    expect(result.success && result.data.maxResults).toBe(75);
+  });
+
+  it.each([undefined, ""])("defaults maxResults when the form value is %s", (maxResults) => {
+    const result = parseCreateRunFormData(
+      formWith({ city: "Houston", country: "USA", niche: "dentists", maxResults }),
+    );
+
+    expect(result.success && result.data.maxResults).toBe(DEFAULT_MAX_RESULTS);
+  });
+
+  it("treats a blank optional neighborhood as absent", () => {
+    const result = parseCreateRunFormData(
+      formWith({ ...valid, maxResults: "50", neighborhood: "" }),
+    );
+
+    expect(result.success && result.data.neighborhood).toBeUndefined();
+  });
+
+  it.each(["0", "-5", "10.5", "abc"])("rejects invalid form maxResults %s", (maxResults) => {
+    const result = parseCreateRunFormData(formWith({ ...valid, maxResults }));
+
+    expect(result.success).toBe(false);
+  });
+
+  it("parses save-as-preset fields when presetName is present", () => {
+    const result = parseCreateRunFormData(
+      formWith({ ...valid, maxResults: "50", saveAsPreset: "true", presetName: "My Preset" }),
+    );
+
+    expect(result.success && result.data.presetName).toBe("My Preset");
+  });
+
+  it.each([undefined, ""])("rejects save-as-preset when presetName is %s", (presetName) => {
+    const result = parseCreateRunFormData(
+      formWith({ ...valid, maxResults: "50", saveAsPreset: "true", presetName }),
+    );
+
+    expect(result.success).toBe(false);
   });
 });
 
@@ -85,32 +143,5 @@ describe("runsListQuerySchema", () => {
   it("defaults page to 1 when omitted", () => {
     const result = runsListQuerySchema.parse({});
     expect(result.page).toBe(1);
-  });
-});
-
-describe("saveAsPresetSchema", () => {
-  it("passes when saveAsPreset is false (no presetName required)", () => {
-    expect(saveAsPresetSchema.safeParse({ saveAsPreset: false }).success).toBe(true);
-  });
-
-  it("passes when saveAsPreset is true and presetName is provided", () => {
-    expect(
-      saveAsPresetSchema.safeParse({ saveAsPreset: true, presetName: "My Preset" }).success,
-    ).toBe(true);
-  });
-
-  it("fails when saveAsPreset is true but presetName is missing", () => {
-    expect(saveAsPresetSchema.safeParse({ saveAsPreset: true }).success).toBe(false);
-  });
-
-  it("fails when saveAsPreset is true but presetName is empty", () => {
-    expect(saveAsPresetSchema.safeParse({ saveAsPreset: true, presetName: "" }).success).toBe(
-      false,
-    );
-  });
-
-  it("defaults saveAsPreset to false when omitted", () => {
-    const result = saveAsPresetSchema.parse({});
-    expect(result.saveAsPreset).toBe(false);
   });
 });

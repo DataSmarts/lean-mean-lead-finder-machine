@@ -53,6 +53,15 @@ describe("POST /api/runs", () => {
     expect(response.status).toBe(400);
   });
 
+  it("rejects a string maxResults with 400 and does not create or trigger", async () => {
+    const { createAndTrigger } = setup();
+
+    const response = await POST(request({ ...validBody, maxResults: "50" }));
+
+    expect(response.status).toBe(400);
+    expect(createAndTrigger).not.toHaveBeenCalled();
+  });
+
   it("creates a run as triggerSource=api and triggers orchestrate", async () => {
     const { createAndTrigger } = setup();
 

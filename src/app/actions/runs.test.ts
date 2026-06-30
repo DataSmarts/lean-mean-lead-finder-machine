@@ -141,6 +141,26 @@ describe("createRun action", () => {
     );
   });
 
+  it("defaults maxResults when the FormData string is blank", async () => {
+    const { createAndTrigger } = setupService();
+    setupPresets();
+
+    await createRun({}, formWith({ ...validFields, maxResults: "" }));
+
+    expect(createAndTrigger).toHaveBeenCalledWith(
+      expect.objectContaining<Partial<CreateRunInput>>({ maxResults: DEFAULT_MAX_RESULTS }),
+    );
+  });
+
+  it("returns an error when maxResults is not a valid form number", async () => {
+    const { createAndTrigger } = setupService();
+
+    const result = await createRun({}, formWith({ ...validFields, maxResults: "abc" }));
+
+    expect(result.error).toBeDefined();
+    expect(createAndTrigger).not.toHaveBeenCalled();
+  });
+
   it("succeeds when neighborhood is an empty string (treats it as omitted)", async () => {
     const { createAndTrigger } = setupService();
     setupPresets();
@@ -185,6 +205,18 @@ describe("createRun action", () => {
     const { createAndTrigger } = setupService();
 
     const result = await createRun({}, formWith({ ...validFields, saveAsPreset: "true" }));
+
+    expect(result.error).toBeDefined();
+    expect(createAndTrigger).not.toHaveBeenCalled();
+  });
+
+  it("returns an error when saveAsPreset is true but presetName is blank", async () => {
+    const { createAndTrigger } = setupService();
+
+    const result = await createRun(
+      {},
+      formWith({ ...validFields, saveAsPreset: "true", presetName: "" }),
+    );
 
     expect(result.error).toBeDefined();
     expect(createAndTrigger).not.toHaveBeenCalled();
