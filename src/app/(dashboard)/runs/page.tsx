@@ -8,6 +8,7 @@ import { makeRunsListService } from "@/lib/services/runs-list";
 import { runsListQuerySchema } from "@/lib/validation/runs";
 
 import styles from "./runs.module.css";
+import { buildRunsHref } from "./runs-query";
 
 export const dynamic = "force-dynamic";
 
@@ -40,14 +41,6 @@ function formatDate(iso: string): string {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function buildHref(status: RunStatusValue | undefined, page: number): string {
-  const params = new URLSearchParams();
-  if (status) params.set("status", status);
-  if (page > 1) params.set("page", String(page));
-  const qs = params.toString();
-  return `/runs${qs ? `?${qs}` : ""}`;
 }
 
 interface PageProps {
@@ -85,7 +78,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
             return (
               <Link
                 key={label}
-                href={buildHref(value, 1)}
+                href={buildRunsHref({ status: value, page: 1 })}
                 className={`${styles.filterBtn} ${isActive ? styles.filterBtnActive : ""}`}
                 aria-current={isActive ? "true" : undefined}
               >
@@ -181,7 +174,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
           </span>
           <div className={styles.pageButtons}>
             <Link
-              href={buildHref(query.status, query.page - 1)}
+              href={buildRunsHref({ status: query.status, page: query.page - 1 })}
               className={`${styles.pageBtn} ${query.page <= 1 ? styles.pageBtnDisabled : ""}`}
               aria-disabled={query.page <= 1}
               tabIndex={query.page <= 1 ? -1 : undefined}
@@ -189,7 +182,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
               Prev
             </Link>
             <Link
-              href={buildHref(query.status, query.page + 1)}
+              href={buildRunsHref({ status: query.status, page: query.page + 1 })}
               className={`${styles.pageBtn} ${query.page >= totalPages ? styles.pageBtnDisabled : ""}`}
               aria-disabled={query.page >= totalPages}
               tabIndex={query.page >= totalPages ? -1 : undefined}
