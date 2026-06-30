@@ -1,13 +1,10 @@
-import { wait } from "@trigger.dev/sdk";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { createHttpClient } from "@/lib/clients/http";
 import { createTelegramClient } from "@/lib/clients/telegram";
-import { getDb } from "@/lib/db/client";
-import { makeRunsRepo } from "@/lib/db/runs.repo";
 import { env, webEnv } from "@/lib/env";
-import { createApprovalService } from "@/lib/services/approval";
+import { createApprovalRuntime } from "@/lib/services/approval-runtime";
 import { parseCallbackData, telegramUpdateSchema } from "@/lib/validation/telegram";
 
 // Next.js must use the Node.js runtime for Trigger.dev SDK (wait.completeToken).
@@ -48,10 +45,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ? `telegram:${cbq.from.username}`
     : `telegram:${String(cbq.from.id)}`;
 
-  const service = createApprovalService({
-    runsRepo: makeRunsRepo(getDb()),
-    completeWaitpoint: (id, data) => wait.completeToken(id, data).then(() => undefined),
-  });
+  const service = createApprovalRuntime();
 
   const outcome = await (callbackData.action === "approve"
     ? service.approve({ approvalToken: callbackData.approvalToken }, by)

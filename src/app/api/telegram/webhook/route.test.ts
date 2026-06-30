@@ -1,20 +1,15 @@
 import type { NextRequest } from "next/server";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { TelegramClient } from "@/lib/clients/telegram";
 import { createTelegramClient } from "@/lib/clients/telegram";
 import type { ApprovalService } from "@/lib/services/approval";
-import { createApprovalService } from "@/lib/services/approval";
+import { createApprovalRuntime } from "@/lib/services/approval-runtime";
 
 import { POST } from "./route";
 
-vi.mock("@/lib/services/approval", () => ({ createApprovalService: vi.fn() }));
+vi.mock("@/lib/services/approval-runtime", () => ({ createApprovalRuntime: vi.fn() }));
 vi.mock("@/lib/clients/telegram", () => ({ createTelegramClient: vi.fn() }));
-vi.mock("@trigger.dev/sdk", () => ({
-  wait: { completeToken: vi.fn().mockResolvedValue({ success: true }) },
-}));
-vi.mock("@/lib/db/client", () => ({ getDb: vi.fn(() => ({})) }));
-vi.mock("@/lib/db/runs.repo", () => ({ makeRunsRepo: vi.fn() }));
 
 function request(body: unknown, headers: Record<string, string> = {}): NextRequest {
   return {
@@ -39,7 +34,7 @@ const validUpdate = { update_id: 1, callback_query: callbackQuery };
 function setupService(outcome: Awaited<ReturnType<ApprovalService["approve"]>>) {
   const approve = vi.fn().mockResolvedValue(outcome);
   const reject = vi.fn().mockResolvedValue(outcome);
-  vi.mocked(createApprovalService).mockReturnValue({ approve, reject });
+  vi.mocked(createApprovalRuntime).mockReturnValue({ approve, reject });
   return { approve, reject };
 }
 
@@ -56,6 +51,10 @@ function setupTelegram() {
 }
 
 describe("POST /api/telegram/webhook", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("returns 401 when the secret header is missing", async () => {
     const res = await POST(request(validUpdate));
     expect(res.status).toBe(401);
@@ -74,7 +73,6 @@ describe("POST /api/telegram/webhook", () => {
   });
 
   it("returns 200 and answers the callback on an unrecognised callback_data prefix", async () => {
-    setupTelegram();
     const { answerCallbackQuery } = setupTelegram();
     const update = {
       ...validUpdate,
@@ -84,6 +82,7 @@ describe("POST /api/telegram/webhook", () => {
     const res = await POST(request(update, { "x-telegram-bot-api-secret-token": VALID_SECRET }));
 
     expect(res.status).toBe(200);
+    expect(createApprovalRuntime).not.toHaveBeenCalled();
     expect(answerCallbackQuery).toHaveBeenCalledWith({ callbackQueryId: "cbq-1" });
   });
 
@@ -167,6 +166,7 @@ describe("POST /api/telegram/webhook", () => {
 
     await POST(request(update, { "x-telegram-bot-api-secret-token": VALID_SECRET }));
 
+    expect(createApprovalRuntime).not.toHaveBeenCalled();
     expect(approve).not.toHaveBeenCalled();
     expect(answerCallbackQuery).toHaveBeenCalledWith({ callbackQueryId: "cbq-1" });
   });
