@@ -1,13 +1,18 @@
 import type { AppDatabase } from "@/lib/db/client";
+import type { LeadRow, LeadsFilter } from "@/lib/db/leads.repo";
+import { makeLeadsRepo } from "@/lib/db/leads.repo";
 import type { Run } from "@/lib/db/runs.repo";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
 
 import { mergedToCsv, rawToCsv } from "./export";
-import type { LeadsExportService } from "./leads-export";
-import { makeLeadsExportService } from "./leads-export";
 
 export interface RunExportRunsRepo {
   findById(id: string): Promise<Run | undefined>;
+}
+
+export interface RunExportLeadsRepo {
+  exportMerged(filter: LeadsFilter): Promise<LeadRow[]>;
+  exportRaw(runId: string): Promise<LeadRow[]>;
 }
 
 export type RunExportResult =
@@ -20,9 +25,9 @@ export interface RunExportService {
 
 export function createRunExportService(deps: {
   readonly runsRepo: RunExportRunsRepo;
-  readonly leadsExportService: LeadsExportService;
+  readonly leadsRepo: RunExportLeadsRepo;
 }): RunExportService {
-  const { runsRepo, leadsExportService } = deps;
+  const { runsRepo, leadsRepo } = deps;
 
   return {
     async exportRun({ runId, raw }) {
@@ -30,7 +35,7 @@ export function createRunExportService(deps: {
       if (!run) return { status: "not_found" };
 
       if (raw) {
-        const rows = await leadsExportService.exportRaw(runId);
+        const rows = await leadsRepo.exportRaw(runId);
         return {
           status: "ok",
           csv: rawToCsv(rows),
@@ -38,7 +43,7 @@ export function createRunExportService(deps: {
         };
       }
 
-      const rows = await leadsExportService.exportMerged({ runId });
+      const rows = await leadsRepo.exportMerged({ runId });
       return {
         status: "ok",
         csv: mergedToCsv(rows),
@@ -51,6 +56,6 @@ export function createRunExportService(deps: {
 export function makeRunExportService(db: AppDatabase): RunExportService {
   return createRunExportService({
     runsRepo: makeRunsRepo(db),
-    leadsExportService: makeLeadsExportService(db),
+    leadsRepo: makeLeadsRepo(db),
   });
 }
