@@ -110,12 +110,14 @@ describe("createEnrichWriter.persist (integration)", () => {
       businessId: biz.id,
       rawContacts: [{ contact: rawContact, mergedPersonIndex: 0 }],
       mergedContacts: [mergedContact],
-      enrichStatus: "enriched",
-      aiStatus: "skipped",
-      hunterStatus: "succeeded",
-      aiError: null,
-      hunterError: null,
-      prevEnrichStatus: "queued",
+      status: {
+        enrichStatus: "enriched",
+        aiStatus: "skipped",
+        hunterStatus: "succeeded",
+        aiError: null,
+        hunterError: null,
+      },
+      counterDeltas: { businessesEnriched: 1, businessesFailed: 0, contactsFound: 1 },
     });
 
     const contactsRepo = makeContactsRepo(db);
@@ -225,24 +227,29 @@ describe("createEnrichWriter.persist (integration)", () => {
           raw: null,
         },
       ],
-      enrichStatus: "enriched" as const,
-      aiStatus: "succeeded" as const,
-      hunterStatus: "skipped" as const,
-      aiError: null,
-      hunterError: null,
-      prevEnrichStatus: "queued" as const,
+      status: {
+        enrichStatus: "enriched" as const,
+        aiStatus: "succeeded" as const,
+        hunterStatus: "skipped" as const,
+        aiError: null,
+        hunterError: null,
+      },
+      counterDeltas: { businessesEnriched: 1, businessesFailed: 0, contactsFound: 1 },
     };
 
     await persist(args);
     // Second call simulates a task retry.
-    await persist({ ...args, prevEnrichStatus: "enriched" });
+    await persist({
+      ...args,
+      counterDeltas: { businessesEnriched: 0, businessesFailed: 0, contactsFound: 0 },
+    });
 
     const contactsRepo = makeContactsRepo(db);
     const all = await contactsRepo.findByRunAndBusiness(run.id, biz.id);
     expect(all.filter((c) => c.kind === "merged")).toHaveLength(1);
     expect(all.filter((c) => c.kind === "person")).toHaveLength(1);
 
-    // Counter not double-counted on retry (prevEnrichStatus='enriched' was terminal).
+    // Counter not double-counted on retry because the service supplies zero deltas.
     const updatedRun = await runsRepo.findById(run.id);
     expect(updatedRun!.businessesEnriched).toBe(1);
   });

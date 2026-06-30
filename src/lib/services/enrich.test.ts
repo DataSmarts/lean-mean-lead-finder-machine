@@ -118,7 +118,9 @@ function makeHunterService(contacts: SourceContact[] = [hunterContact]): HunterE
 }
 
 function makePersist(): PersistEnrichment {
-  return vi.fn().mockResolvedValue({ newlyTerminal: true });
+  return vi.fn().mockResolvedValue({
+    counterDeltas: { businessesEnriched: 1, businessesFailed: 0, contactsFound: 1 },
+  });
 }
 
 function makePersistReuse(): PersistReuseEnrichment {
@@ -173,7 +175,18 @@ describe("createEnrichService.enrichBusiness", () => {
     expect(result.aiStatus).toBe("succeeded");
     expect(result.hunterStatus).toBe("succeeded");
     expect(result.mergedCount).toBeGreaterThan(0);
-    expect(persist).toHaveBeenCalledOnce();
+    expect(persist).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: {
+          enrichStatus: "enriched",
+          aiStatus: "succeeded",
+          hunterStatus: "succeeded",
+          aiError: null,
+          hunterError: null,
+        },
+        counterDeltas: { businessesEnriched: 1, businessesFailed: 0, contactsFound: 1 },
+      }),
+    );
   });
 
   it("yields partial and persists when AI fails but Hunter succeeds", async () => {
@@ -194,8 +207,11 @@ describe("createEnrichService.enrichBusiness", () => {
     expect(result.hunterStatus).toBe("succeeded");
     expect(persist).toHaveBeenCalledWith(
       expect.objectContaining({
-        aiError: "ai error",
-        enrichStatus: "partial",
+        status: expect.objectContaining({
+          aiError: "ai error",
+          enrichStatus: "partial",
+        }),
+        counterDeltas: { businessesEnriched: 1, businessesFailed: 0, contactsFound: 1 },
       }),
     );
   });
@@ -236,9 +252,34 @@ describe("createEnrichService.enrichBusiness", () => {
     expect(result.hunterStatus).toBe("skipped");
     expect(persist).toHaveBeenCalledWith(
       expect.objectContaining({
-        aiError: "ai error",
-        enrichStatus: "failed",
-        hunterStatus: "skipped",
+        status: expect.objectContaining({
+          aiError: "ai error",
+          enrichStatus: "failed",
+          hunterStatus: "skipped",
+        }),
+        counterDeltas: { businessesEnriched: 0, businessesFailed: 1, contactsFound: 0 },
+      }),
+    );
+  });
+
+  it("passes zero counter deltas when retrying a terminal run business", async () => {
+    const persist = makePersist();
+    const service = createEnrichService({
+      runBusinessesRepo: makeRbRepo({
+        findById: vi.fn().mockResolvedValue(makeRunBusiness({ enrichStatus: "enriched" })),
+      }),
+      businessesRepo: makeBizRepo(),
+      aiEnrichService: makeAiService(),
+      hunterEnrichService: makeHunterService(),
+      persist,
+      persistReuse: makePersistReuse(),
+    });
+
+    await service.enrichBusiness("rb-1");
+
+    expect(persist).toHaveBeenCalledWith(
+      expect.objectContaining({
+        counterDeltas: { businessesEnriched: 0, businessesFailed: 0, contactsFound: 0 },
       }),
     );
   });
@@ -265,7 +306,19 @@ describe("createEnrichService.enrichBusiness", () => {
     const result = await service.enrichBusiness("rb-1");
 
     expect(result.reused).toBe(true);
-    expect(persistReuse).toHaveBeenCalledWith(expect.objectContaining({ sourceRunId: "old-run" }));
+    expect(persistReuse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceRunId: "old-run",
+        previousEnrichStatus: "queued",
+        status: {
+          enrichStatus: "enriched",
+          aiStatus: "skipped",
+          hunterStatus: "skipped",
+          aiError: null,
+          hunterError: null,
+        },
+      }),
+    );
   });
 
   it("does not call AI/Hunter when reusing", async () => {

@@ -12,6 +12,7 @@ import type {
   SourceStatusValue,
   StatusUpdate,
 } from "@/lib/db/run-businesses.repo";
+import { calculateTerminalCounterDeltas, rollUpStatus } from "@/lib/domain/enrich-policy";
 import { PipelineStateError } from "@/lib/errors";
 
 import type { AiEnrichService } from "./ai-enrich";
@@ -19,6 +20,7 @@ import type { HunterEnrichService } from "./hunter-enrich";
 import { merge, type MergedPerson, type SourceContact } from "./merge";
 
 export { DEFAULT_ENRICH_REUSE_DAYS };
+export { rollUpStatus } from "@/lib/domain/enrich-policy";
 
 // Narrow repo ports (ISP).
 export interface EnrichRunBusinessesRepo {
@@ -57,21 +59,6 @@ export interface EnrichResult {
 
 export interface EnrichService {
   enrichBusiness(runBusinessId: string): Promise<EnrichResult>;
-}
-
-// Pure: maps per-source outcomes to the overall business enrich_status.
-export function rollUpStatus(
-  aiStatus: SourceStatusValue,
-  hunterStatus: SourceStatusValue,
-): EnrichStatusValue {
-  const statuses = [aiStatus, hunterStatus];
-  const succeeded = statuses.filter((status) => status === "succeeded").length;
-  const failed = statuses.filter((status) => status === "failed").length;
-
-  if (succeeded > 0 && failed === 0) return "enriched";
-  if (succeeded === 0 && failed > 0) return "failed";
-  if (succeeded === 0 && failed === 0) return "skipped";
-  return "partial";
 }
 
 function extractErrorMessage(err: unknown): string {
@@ -193,7 +180,14 @@ export function createEnrichService({
           runBusinessId,
           businessId: runBusiness.businessId,
           sourceRunId: reusable.runId,
-          prevEnrichStatus: runBusiness.enrichStatus,
+          previousEnrichStatus: runBusiness.enrichStatus,
+          status: {
+            enrichStatus: "enriched",
+            aiStatus: "skipped",
+            hunterStatus: "skipped",
+            aiError: null,
+            hunterError: null,
+          },
         });
         return {
           enrichStatus: "enriched",
@@ -260,12 +254,18 @@ export function createEnrichService({
         businessId: runBusiness.businessId,
         rawContacts,
         mergedContacts,
-        enrichStatus,
-        aiStatus,
-        hunterStatus,
-        aiError,
-        hunterError,
-        prevEnrichStatus: runBusiness.enrichStatus,
+        status: {
+          enrichStatus,
+          aiStatus,
+          hunterStatus,
+          aiError,
+          hunterError,
+        },
+        counterDeltas: calculateTerminalCounterDeltas({
+          previousStatus: runBusiness.enrichStatus,
+          nextStatus: enrichStatus,
+          mergedContactCount: mergedPersons.length,
+        }),
       });
 
       return {
