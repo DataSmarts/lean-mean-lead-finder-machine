@@ -9,6 +9,7 @@ import { POST } from "./route";
 
 vi.mock("@/lib/services/run", () => ({ createRunService: vi.fn() }));
 vi.mock("@/lib/clients/trigger", () => ({ createLeadRunTrigger: vi.fn(() => ({})) }));
+vi.mock("@/lib/db/client", () => ({ getDb: vi.fn(() => ({})) }));
 
 function request(body: unknown): NextRequest {
   return { json: async () => body } as unknown as NextRequest;

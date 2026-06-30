@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/config/defaults";
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { EMAIL_VERIFICATION_BADGE_TONE } from "@/lib/leads/source-badge";
 import { makeLeadsReadService } from "@/lib/services/leads-read";
 import type { LeadsListQuery } from "@/lib/validation/leads";
@@ -64,7 +64,7 @@ export default async function LeadsPage({ searchParams }: PageProps) {
     page: typeof sp["page"] === "string" ? sp["page"] : undefined,
   });
 
-  const service = makeLeadsReadService(db);
+  const service = makeLeadsReadService(getDb());
   const [result, runOptions] = await Promise.all([
     service.list({ ...query, pageSize: DEFAULT_LIST_PAGE_SIZE }),
     service.runOptions(),

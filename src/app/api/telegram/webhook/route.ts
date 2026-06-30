@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 import { createHttpClient } from "@/lib/clients/http";
 import { createTelegramClient } from "@/lib/clients/telegram";
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
 import { env, webEnv } from "@/lib/env";
 import { createApprovalService } from "@/lib/services/approval";
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     : `telegram:${String(cbq.from.id)}`;
 
   const service = createApprovalService({
-    runsRepo: makeRunsRepo(db),
+    runsRepo: makeRunsRepo(getDb()),
     completeWaitpoint: (id, data) => wait.completeToken(id, data).then(() => undefined),
   });
 

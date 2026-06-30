@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createLeadRunTrigger } from "@/lib/clients/trigger";
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { createRunService } from "@/lib/services/run";
 import { createRunSchema } from "@/lib/validation/runs";
 
@@ -18,10 +18,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const run = await createRunService({ db, trigger: createLeadRunTrigger() }).createAndTrigger({
-    ...parsed.data,
-    triggerSource: "api",
-  });
+  const run = await createRunService({
+    db: getDb(),
+    trigger: createLeadRunTrigger(),
+  }).createAndTrigger({ ...parsed.data, triggerSource: "api" });
 
   return NextResponse.json({ runId: run.id, status: run.status }, { status: 202 });
 }

@@ -2,7 +2,7 @@ import { wait } from "@trigger.dev/sdk";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { makeRunsRepo } from "@/lib/db/runs.repo";
 import { createApprovalService } from "@/lib/services/approval";
 
@@ -14,7 +14,7 @@ export async function POST(
   const { id } = await params;
 
   const service = createApprovalService({
-    runsRepo: makeRunsRepo(db),
+    runsRepo: makeRunsRepo(getDb()),
     completeWaitpoint: (waitpointId, data) =>
       wait.completeToken(waitpointId, data).then(() => undefined),
   });

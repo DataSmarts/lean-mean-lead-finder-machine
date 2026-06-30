@@ -4,7 +4,7 @@ import { createHttpClient } from "@/lib/clients/http";
 import { createHunterClient } from "@/lib/clients/hunter";
 import { createOpenRouterClient } from "@/lib/clients/openrouter";
 import { makeBusinessesRepo } from "@/lib/db/businesses.repo";
-import { dbDirect } from "@/lib/db/client";
+import { getDbDirect } from "@/lib/db/client";
 import { createEnrichWriter } from "@/lib/db/enrich-write";
 import { makeRunBusinessesRepo } from "@/lib/db/run-businesses.repo";
 import { env } from "@/lib/env";
@@ -12,8 +12,6 @@ import { captureTriggerFailure } from "@/lib/observability/trigger";
 import { createAiEnrichService } from "@/lib/services/ai-enrich";
 import { createEnrichService } from "@/lib/services/enrich";
 import { createHunterEnrichService } from "@/lib/services/hunter-enrich";
-
-const { persist, persistReuse } = createEnrichWriter(dbDirect);
 
 // Chunks an array into sub-arrays of at most `size` elements. Pure helper.
 export function chunk<T>(arr: T[], size: number): T[][] {
@@ -36,6 +34,8 @@ export const enrichBusinessTask = task({
       error,
     }),
   run: async (payload: { runBusinessId: string }) => {
+    const db = getDbDirect();
+    const { persist, persistReuse } = createEnrichWriter(db);
     const http = createHttpClient();
     const hunterClient = createHunterClient({
       http,
@@ -48,8 +48,8 @@ export const enrichBusinessTask = task({
       model: env.OPENROUTER_MODEL,
     });
     const service = createEnrichService({
-      runBusinessesRepo: makeRunBusinessesRepo(dbDirect),
-      businessesRepo: makeBusinessesRepo(dbDirect),
+      runBusinessesRepo: makeRunBusinessesRepo(db),
+      businessesRepo: makeBusinessesRepo(db),
       aiEnrichService: createAiEnrichService({ openRouterClient }),
       hunterEnrichService: createHunterEnrichService({ hunterClient }),
       persist,
@@ -72,7 +72,7 @@ export const enrichFanOutTask = task({
       runId: payload.runId,
     }),
   run: async (payload: { runId: string }) => {
-    const runBusinessesRepo = makeRunBusinessesRepo(dbDirect);
+    const runBusinessesRepo = makeRunBusinessesRepo(getDbDirect());
     const all = await runBusinessesRepo.findByRun(payload.runId);
     const queued = all.filter((rb) => rb.enrichStatus === "queued");
 

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { RunExportService } from "@/lib/services/run-export";
 
-vi.mock("@/lib/db/client", () => ({ db: {} }));
+vi.mock("@/lib/db/client", () => ({ getDb: vi.fn(() => ({})) }));
 vi.mock("@/lib/services/run-export", () => ({ makeRunExportService: vi.fn() }));
 
 import { makeRunExportService } from "@/lib/services/run-export";

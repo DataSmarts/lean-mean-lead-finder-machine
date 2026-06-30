@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createLeadRunTrigger } from "@/lib/clients/trigger";
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { makePresetsRepo } from "@/lib/db/presets.repo";
 import { createDashboardRunLaunchService } from "@/lib/services/dashboard-run-launch";
 import { createRunService } from "@/lib/services/run";
@@ -26,6 +26,7 @@ export async function createRun(
     return { error: "Invalid input. Please check all required fields." };
   }
 
+  const db = getDb();
   const launchService = createDashboardRunLaunchService({
     presetsRepo: makePresetsRepo(db),
     runService: createRunService({ db, trigger: createLeadRunTrigger() }),

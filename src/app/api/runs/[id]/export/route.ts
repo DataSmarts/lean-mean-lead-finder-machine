@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { makeRunExportService } from "@/lib/services/run-export";
 import { runExportQuerySchema } from "@/lib/validation/leads";
 
@@ -17,7 +17,7 @@ export async function GET(
   const sp = Object.fromEntries(url.searchParams.entries());
   const { raw } = runExportQuerySchema.parse(sp);
 
-  const result = await makeRunExportService(db).exportRun({ runId: id, raw });
+  const result = await makeRunExportService(getDb()).exportRun({ runId: id, raw });
   if (result.status === "not_found") {
     return NextResponse.json({ error: "Run not found" }, { status: 404 });
   }

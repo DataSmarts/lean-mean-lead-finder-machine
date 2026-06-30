@@ -7,7 +7,7 @@ import { makeRunReadService } from "@/lib/services/run-read";
 import { GET } from "./route";
 
 vi.mock("@/lib/services/run-read", () => ({ makeRunReadService: vi.fn() }));
-vi.mock("@/lib/db/client", () => ({ db: {} }));
+vi.mock("@/lib/db/client", () => ({ getDb: vi.fn(() => ({})) }));
 
 function makeParams(id: string): { params: Promise<{ id: string }> } {
   return { params: Promise.resolve({ id }) };

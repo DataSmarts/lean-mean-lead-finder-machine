@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/config/defaults";
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import type { RunStatusValue } from "@/lib/domain/enums";
 import { RUN_STATUS_BADGE_TONE } from "@/lib/runs/status";
 import { makeRunsListService } from "@/lib/services/runs-list";
@@ -61,7 +61,7 @@ export default async function RunsPage({ searchParams }: PageProps) {
     page: typeof sp["page"] === "string" ? sp["page"] : undefined,
   });
 
-  const result = await makeRunsListService(db).list({
+  const result = await makeRunsListService(getDb()).list({
     page: query.page,
     pageSize: DEFAULT_LIST_PAGE_SIZE,
     status: query.status,

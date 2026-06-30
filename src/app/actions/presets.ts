@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createLeadRunTrigger } from "@/lib/clients/trigger";
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { makePresetsRepo } from "@/lib/db/presets.repo";
 import { createPresetManagementService } from "@/lib/services/preset-management";
 import type { ScheduleOps } from "@/lib/services/preset-schedule";
@@ -31,6 +31,7 @@ const scheduleOps: ScheduleOps = {
 const scheduleService = createPresetScheduleService({ scheduleOps });
 
 function makePresetManagementService() {
+  const db = getDb();
   return createPresetManagementService({
     presetsRepo: makePresetsRepo(db),
     scheduleService,

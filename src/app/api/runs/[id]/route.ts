@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { db } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
 import { makeRunReadService } from "@/lib/services/run-read";
 
 // Authenticated by the proxy gate (src/proxy.ts) — /api/* except the Telegram webhook.
@@ -13,7 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const { id } = await params;
-  const view = await makeRunReadService(db).getDetail(id);
+  const view = await makeRunReadService(getDb()).getDetail(id);
   if (!view) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
